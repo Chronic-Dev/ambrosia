@@ -3,7 +3,7 @@
 //  ambrosia
 //
 //  Created by Kevin Bradley on 4/14/11.
-//  Copyright 2011 __MyCompanyName__. All rights reserved.
+//  Copyright 2011 Chronic-Dev Team. All rights reserved.
 //
 
 #import "ambrosiaAppDelegate.h"
