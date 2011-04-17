@@ -1,0 +1,9 @@
+//
+// Prefix header for all source files of the 'ambrosia' target in the 'ambrosia' project
+//
+
+#ifdef __OBJC__
+    #import <Cocoa/Cocoa.h>
+	#import "defines.h"
+
+#endif
