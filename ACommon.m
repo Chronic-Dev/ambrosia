@@ -42,6 +42,50 @@
 	return basePath;
 }
 
++ (NSDictionary *)decryptedKbag:(NSString *)theKbag
+{
+		//NSArray *ivK = [ACommon runHelper:theKbag];
+	
+	NSArray *ivK = [ACommon runHelper:theKbag];
+	
+	
+	if ([[ivK objectAtIndex:0] isEqualToString:@"TRY_AGAIN"])
+	{
+		ivK = [ACommon runHelper:theKbag];
+	}
+	
+	NSLog(@"ivK: %@", ivK);
+	if ([ivK count] == 0)
+		
+		return nil;
+	
+		//DebugLog(@"ivk: %@", ivK);
+	NSString *k = [ivK objectAtIndex:3];
+	NSString *iv = [ivK objectAtIndex:1];
+	
+	NSCharacterSet *theSet = [NSCharacterSet characterSetWithCharactersInString:@"\0\n "];
+	k = [k stringByTrimmingCharactersInSet:theSet];
+	
+	k = [k stringByReplacingOccurrencesOfString:@"\0" withString:@""];
+	k = [k stringByReplacingOccurrencesOfString:@"  " withString:@""];
+	k = [k stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+		//NSString *kTrim = [k substringWithRange:NSMakeRange(0, 96)];
+	
+	
+	iv = [iv stringByReplacingOccurrencesOfString:@"\0" withString:@""];
+	iv = [iv stringByReplacingOccurrencesOfString:@"  " withString:@""];
+	
+		//DebugLog(@"iv: %@", iv);
+	
+	NSDictionary *ivKDict = [NSDictionary dictionaryWithObjectsAndKeys:iv, @"iv", k, @"k", nil];
+	NSLog(@"ivkDict: %@", ivKDict);
+		//NSString *dict = [[NSHomeDirectory() stringByAppendingPathComponent:theKbag] stringByAppendingPathExtension:@"plist"];
+		//[ivKDict writeToFile:dict atomically:YES];
+	return ivKDict;
+	
+}
+
+
 + (NSString *)mountImage:(NSString *)irString
 {
 	NSTask *irTask = [[NSTask alloc] init];
@@ -66,7 +110,7 @@
 	
 	[irTask setStandardError:hdip];
 	[irTask setStandardOutput:hdip];
-		//NSLog(@"hdiutil %@", [[irTask arguments] componentsJoinedByString:@" "]);
+		//DebugLog(@"hdiutil %@", [[irTask arguments] componentsJoinedByString:@" "]);
 	[irTask launch];
 	[irTask waitUntilExit];
 	
@@ -84,12 +128,12 @@
 		
 	{
 		
-		NSLog(@"%@", the_error);
+		DebugLog(@"%@", the_error);
 		
 		[the_error release];
 		
 	}
-		//NSLog(@"plist: %@", plist);
+		//DebugLog(@"plist: %@", plist);
 	
 	NSArray *plistArray = [plist objectForKey:@"system-entities"];
 	
@@ -106,7 +150,7 @@
 		mountPath = [mountDict objectForKey:@"mount-point"];
 		if (mountPath != nil)
 		{
-				//NSLog(@"Mount Point: %@", mountPath);
+				//DebugLog(@"Mount Point: %@", mountPath);
 			
 			
 			int rValue = [irTask terminationStatus];
@@ -127,7 +171,7 @@
 + (NSString *)genpassFromRamdisk:(NSString *)ramdisk platform:(NSString *)thePlatform andFilesystem:(NSString *)theFilesystem
 {
 	NSString *command = [NSString stringWithFormat:@"\"%@\" %@ \"%@\" \"%@\"\n", GENPASS, thePlatform, ramdisk, theFilesystem];
-		NSLog(@"%@", command);
+		DebugLog(@"%@", command);
 	return [ACommon singleLineReturnForProcess:command];
 	
 }
@@ -138,14 +182,14 @@
 	[vfTask setLaunchPath:VFDECRYPT];
 	NSString *decrypted = [[[fileSystem stringByDeletingPathExtension] stringByAppendingString:@"_decrypt"] stringByAppendingPathExtension:@"dmg"];
 	[vfTask setArguments:[NSArray arrayWithObjects:@"-i", fileSystem, @"-k", fileSystemKey, @"-o", decrypted, nil]];
-		NSLog(@"%@ %@\n", VFDECRYPT, [[vfTask arguments] componentsJoinedByString:@" "]);
+		DebugLog(@"%@ %@\n", VFDECRYPT, [[vfTask arguments] componentsJoinedByString:@" "]);
 		//[vfTask setStandardError:NULLOUT];
 		//[vfTask setStandardOutput:NULLOUT];
 	[vfTask launch];
 	[vfTask waitUntilExit];
 	
 	int returnStatus = [vfTask terminationStatus];
-	NSLog(@"decryptFilesystem: %i", returnStatus);
+	DebugLog(@"decryptFilesystem: %i", returnStatus);
 	[vfTask release];
 	vfTask = nil;
 		//return returnStatus;
@@ -200,7 +244,7 @@
     while((outData = [swh readDataToEndOfFile]) && [outData length])
     {
         temp = [[[NSString alloc] initWithData:outData encoding:NSASCIIStringEncoding] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-			//NSLog(@"temp length: %i", [temp length]);
+			//DebugLog(@"temp length: %i", [temp length]);
 		
 		if ([temp length] > 800)
 		{
@@ -211,10 +255,10 @@
 			return [NSArray arrayWithObject:@"TRY_AGAIN"];
 		}
 		
-			//NSLog(@"temp: %@", [temp componentsSeparatedByString:@" "]);
+			//DebugLog(@"temp: %@", [temp componentsSeparatedByString:@" "]);
 			//[lineArray addObject:[temp stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
 			//NSArray *arrayOne = [temp componentsSeparatedByString:@"\n"];
-			//NSLog(@"arrayOneCount: %i", [arrayOne count]);
+			//DebugLog(@"arrayOneCount: %i", [arrayOne count]);
 			//NSArray *arrayTwo = [[arrayOne objectAtIndex:0] componentsSeparatedByString:@" "];
 		[lineArray addObjectsFromArray:[[temp stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsSeparatedByString:@" "]];
 		[temp release];
@@ -222,7 +266,7 @@
 	
 	
 	
-		//	NSLog(@"lineARray: %@", lineArray);
+		//	DebugLog(@"lineARray: %@", lineArray);
 	[swh closeFile];
 	[pwnHelper release];
 	
@@ -261,7 +305,7 @@
 	
 	NSFileHandle *nullOut = [NSFileHandle fileHandleWithNullDevice];
 	
-		//NSLog(@"uzp2: %@", uzp2);
+		//DebugLog(@"uzp2: %@", uzp2);
 	NSTask *unzipTask = [[NSTask alloc] init];
 	
 	
@@ -272,14 +316,14 @@
 	[unzipTask launch];
 	[unzipTask waitUntilExit];
 	int theTerm = [unzipTask terminationStatus];
-		//NSLog(@"helperTask terminated with status: %i",theTerm);
+		//DebugLog(@"helperTask terminated with status: %i",theTerm);
 	if (theTerm != 0)
 	{
-			//NSLog(@"failure unzip %@ to %@", theFile, newPath);
+			//DebugLog(@"failure unzip %@ to %@", theFile, newPath);
 		return (FALSE);
 		
 	} else if (theTerm == 0){
-			//NSLog(@"success unzip %@ to %@", theFile, newPath);
+			//DebugLog(@"success unzip %@ to %@", theFile, newPath);
 		
 		return (TRUE);
 	}
@@ -308,8 +352,8 @@
 		
 		
 	}
-		//NSLog(@"decryptArgs; %@", decryptArgs);
-	NSLog(@"xpwntool %@\n", [decryptArgs componentsJoinedByString:@" "]);
+		//DebugLog(@"decryptArgs; %@", decryptArgs);
+	DebugLog(@"xpwntool %@\n", [decryptArgs componentsJoinedByString:@" "]);
 	[decryptTask setArguments:decryptArgs];
 	[decryptArgs release];
 		//[decryptTask setArguments:[NSArray arrayWithObjects:theRamdisk, outputDisk, @"-iv", iv, @"-k", key, nil]];
@@ -346,7 +390,7 @@
 	
 	NSFileHandle *nullOut = [NSFileHandle fileHandleWithNullDevice];
 	
-		//NSLog(@"uzp2: %@", uzp2);
+		//DebugLog(@"uzp2: %@", uzp2);
 	NSTask *unzipTask = [[NSTask alloc] init];
 	
 	

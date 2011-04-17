@@ -29,16 +29,16 @@
 -(BOOL)grabKeybag
 {
 	NSString *kbagProcess = [NSString stringWithFormat:@"\"%@\" \"%@\"", GRABKBAG, self.file];
-		//	NSLog(@"grabKeybag: %@", kbagProcess);
+		//	DebugLog(@"grabKeybag: %@", kbagProcess);
 	NSString *returnString = [ACommon singleLineReturnForProcess:kbagProcess];
 	if (returnString != nil)
 	{
-		NSLog(@"%@ has keybag: %@", [file lastPathComponent], returnString);
+		DebugLog(@"%@ has keybag: %@", [file lastPathComponent], returnString);
 		keyBag = returnString;
 		return TRUE;
 	}
 	
-	NSLog(@"%@ not encrypted!", file);
+	DebugLog(@"%@ not encrypted!", file);
 	return FALSE;
 	
 }
