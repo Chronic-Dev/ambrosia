@@ -47,14 +47,18 @@
 		//NSArray *ivK = [ACommon runHelper:theKbag];
 	
 	NSArray *ivK = [ACommon runHelper:theKbag];
-	
+	if ([ivK count] == 0)
+	{
+		NSLog(@"game over man!!! so... start over man!!!");
+		return nil;
+	}
 	
 	if ([[ivK objectAtIndex:0] isEqualToString:@"TRY_AGAIN"])
 	{
 		ivK = [ACommon runHelper:theKbag];
 	}
 	
-	NSLog(@"ivK: %@", ivK);
+	DebugLog(@"ivK: %@", ivK);
 	if ([ivK count] == 0)
 		
 		return nil;
@@ -78,7 +82,9 @@
 		//DebugLog(@"iv: %@", iv);
 	
 	NSDictionary *ivKDict = [NSDictionary dictionaryWithObjectsAndKeys:iv, @"iv", k, @"k", nil];
-	NSLog(@"ivkDict: %@", ivKDict);
+	DebugLog(@"ivkDict: %@", ivKDict);
+	if ([k isEqualToString:@"fail!"])
+		return nil;
 		//NSString *dict = [[NSHomeDirectory() stringByAppendingPathComponent:theKbag] stringByAppendingPathExtension:@"plist"];
 		//[ivKDict writeToFile:dict atomically:YES];
 	return ivKDict;
@@ -266,7 +272,7 @@
 	
 	
 	
-		//	DebugLog(@"lineARray: %@", lineArray);
+			DebugLog(@"lineArray: %@", lineArray);
 	[swh closeFile];
 	[pwnHelper release];
 	

@@ -89,6 +89,13 @@
 		
 		NSDictionary *decryptedKbag = [ACommon decryptedKbag:kbag];
 		
+		if (decryptedKbag == nil)
+		{
+			NSLog(@"FAIL!!!");
+			[self startOverMan];
+			return;
+		}
+		
 		NSLog(@"decrypting: %@\n", [currentFirmware RestoreRamDisk]);
 		
 		
@@ -171,6 +178,11 @@
 		}
 	}
 	
+	[self startOverMan];
+}
+
+- (void)startOverMan
+{
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	[ipswButton setEnabled:TRUE];
 }
