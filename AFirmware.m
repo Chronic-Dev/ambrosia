@@ -63,7 +63,7 @@
 		
 		[wikiString appendString:[NSString stringWithFormat:@"=== Root Filesystem (%@) ===\n",[[self OS] lastPathComponent]]];
 		
-		[wikiString appendString:[NSString stringWithFormat:@"*'''[[VFDecrypt]] Key''': %@\n",[self vfDecryptKey]]];
+		[wikiString appendString:[NSString stringWithFormat:@"*'''[[VFDecrypt]] Key''': %@\n\n",[self vfDecryptKey]]];
 		
 		[wikiString appendString:[NSString stringWithFormat:@"=== [[Restore Ramdisk]] (%@) ===\n",[[self RestoreRamDisk] lastPathComponent]]];
 	
@@ -83,7 +83,7 @@
 				
 				[wikiString appendString:[NSString stringWithFormat:@"* '''IV''': %@\n",[[[self keyRepository] valueForKey:theObject] valueForKey:@"iv"]]];
 				
-				[wikiString appendString:[NSString stringWithFormat:@"* '''K''': %@\n",[[[self keyRepository] valueForKey:theObject] valueForKey:@"k"]]];
+				[wikiString appendString:[NSString stringWithFormat:@"* '''K''': %@\n\n",[[[self keyRepository] valueForKey:theObject] valueForKey:@"k"]]];
 			}
 			
 		

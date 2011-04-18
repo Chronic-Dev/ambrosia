@@ -384,7 +384,10 @@ void print_progress(double progress, void* data) {
 		
 		NSString *firmwarePlist = [currentFirmware plistPath];
 		NSLog(@"%@", firmwarePlist);
-		
+		if (keysDict != nil)
+		{
+			[keysDict writeToFile:firmwarePlist atomically:YES];
+		}
 		NSString *vfDecryptKey = [ACommon decryptFilesystemFromFirmware:currentFirmware];
 		[keysDict setValue:vfDecryptKey forKey:@"vfdecrypt"];
 		if (keysDict != nil)
