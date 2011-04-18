@@ -26,5 +26,5 @@
 
 - (IBAction)sendCommand:(id)sender;
 - (IBAction)testRun:(id)sender;
-
+- (void)startOverMan;
 @end

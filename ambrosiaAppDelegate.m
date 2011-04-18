@@ -76,7 +76,7 @@
 {
 	NSLog(@"processing kbag array...");
 	NSString *logPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/AMBROSIA_Keys.log"];
-	[FM removeFileAtPath:logPath handler:nil];
+	[FM removeItemAtPath:logPath error:nil];
 	FILE* file = freopen([logPath fileSystemRepresentation], "a", stdout);
 	
 	irecv_error_t error = 0;
@@ -189,7 +189,7 @@
 	
 
 	NSString *logPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/SP_Keys.log"];
-	[FM removeFileAtPath:logPath handler:nil];
+	[FM removeItemAtPath:logPath error:nil];
 	FILE* file = freopen([logPath fileSystemRepresentation], "a", stdout);
 
 	irecv_error_t error = 0;
@@ -230,7 +230,7 @@
 	fclose(file);
 	
 	
-	NSString *me = [NSString stringWithContentsOfFile:logPath];
+	NSString *me = [NSString stringWithContentsOfFile:logPath encoding:NSASCIIStringEncoding error:nil];
 	me = [me stringByReplacingOccurrencesOfString:@"\0" withString:@""];
 	NSLog(@"ME: %@", me);
 	

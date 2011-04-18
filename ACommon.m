@@ -436,7 +436,7 @@
 	[pool release];
 }
 
-+ (NSString *)decryptFilesystemFromFirmware:(AFirmware *)currentFirmware
++ (NSString *)decryptFilesystemFromFirmware:(id)currentFirmware
 {
 	
 	NSString *outputFile = [[currentFirmware RestoreRamDisk] stringByDeletingPathExtension];

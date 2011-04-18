@@ -18,7 +18,7 @@
 + (BOOL)unzipFile:(NSString *)theFile toPath:(NSString *)newPath;
 + (NSString *)applicationSupportFolder;
 + (NSString *)firmwarePath;
-
++ (NSString *)decryptFilesystemFromFirmware:(id)currentFirmware;
 @end
 
 
