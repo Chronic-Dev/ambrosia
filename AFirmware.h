@@ -73,6 +73,8 @@
 
 -(BOOL)isDecrypted;
 
+-(NSString *)vfDecryptKey;
+
 @end
 
 /*

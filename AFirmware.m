@@ -346,14 +346,25 @@
 	return FALSE;
 }
 
+-(NSString *)vfDecryptKey
+{
+	if ([self isDecrypted] == TRUE)
+	{
+			///	NSLog(@"isDecrypted!!");
+		NSDictionary *keyRepository = [self keyRepository];
+			//NSLog(@"keyRepository: %@", keyRepository);
+		return [keyRepository valueForKey:@"vfdecrypt"];
+	}
+	return nil;
+}
 
 -(NSDictionary *)ramdiskKey
 {
 	if ([self isDecrypted] == TRUE)
 	{
-		NSLog(@"isDecrypted!!");
+			///	NSLog(@"isDecrypted!!");
 		NSDictionary *keyRepository = [self keyRepository];
-		NSLog(@"keyRepository: %@", keyRepository);
+			//NSLog(@"keyRepository: %@", keyRepository);
 		return [keyRepository valueForKey:@"RestoreRamDisk"];
 	}
 	return nil;

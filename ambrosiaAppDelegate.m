@@ -386,7 +386,7 @@ void print_progress(double progress, void* data) {
 		NSLog(@"%@", firmwarePlist);
 		
 		NSString *vfDecryptKey = [ACommon decryptFilesystemFromFirmware:currentFirmware];
-		[keysDict setValue:vfDecryptKey forKey:[[currentFirmware OS] lastPathComponent]];
+		[keysDict setValue:vfDecryptKey forKey:@"vfdecrypt"];
 		[keysDict writeToFile:firmwarePlist atomically:YES];
 	}
 	
