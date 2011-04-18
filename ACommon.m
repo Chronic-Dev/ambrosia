@@ -498,6 +498,12 @@
 					
 					NSDictionary *decryptedKbag2 = [ACommon decryptedKbag:kbag2];
 					
+					if (decryptedKbag2 == nil)
+					{
+						NSLog(@"bail!!!, gotz to repois0n!");
+						return nil;
+					}
+					
 					NSLog(@"decrypting: %@", [currentFirmware UpdateRamDisk]);
 					
 					[ACommon decryptRamdisk:[currentFirmware UpdateRamDisk] toPath:outputFile2 withIV:[decryptedKbag2 valueForKey:@"iv"] key:[decryptedKbag2 valueForKey:@"k"]];

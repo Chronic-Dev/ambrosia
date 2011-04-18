@@ -387,7 +387,12 @@ void print_progress(double progress, void* data) {
 		
 		NSString *vfDecryptKey = [ACommon decryptFilesystemFromFirmware:currentFirmware];
 		[keysDict setValue:vfDecryptKey forKey:@"vfdecrypt"];
-		[keysDict writeToFile:firmwarePlist atomically:YES];
+		if (keysDict != nil)
+		{
+			[keysDict writeToFile:firmwarePlist atomically:YES];
+			[[NSWorkspace sharedWorkspace] openFile:firmwarePlist];
+		}
+		
 	}
 	
 	
