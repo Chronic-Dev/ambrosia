@@ -14,11 +14,19 @@
 	IBOutlet NSButton *ipswButton;
 	IBOutlet NSButton *pois0nButton;
 	BOOL poisoning;
+	IBOutlet NSProgressIndicator *downloadBar;
+	IBOutlet NSTextField *downloadProgressField;
+	IBOutlet NSTextField *instructionField;
+	IBOutlet NSImageView *instructionImage;
 	
 	AFirmware *currentFirmware;
 }
 - (IBAction)poison:(id)sender;
 @property (assign) IBOutlet NSWindow *window;
+@property (assign) IBOutlet NSProgressIndicator *downloadBar;
+@property (assign) IBOutlet NSTextField *downloadProgressField;
+@property (assign) IBOutlet NSTextField *instructionField;
+@property (assign) IBOutlet NSImageView *instructionImage;
 @property (assign) IBOutlet NSButton *ipswButton;
 @property (assign) IBOutlet NSButton *pois0nButton;
 @property (assign) AFirmware *currentFirmware;

@@ -12,6 +12,7 @@
 
 
 -(NSString *)cleanedString;
+-(NSString *)decryptedPath;
 
 
 @end
@@ -27,18 +28,65 @@
 }
 
 
+-(NSString *)decryptedPath
+{
+	NSString *current = self;
+	NSString *extension = [current pathExtension];
+	return [[[current stringByDeletingPathExtension] stringByAppendingString:@"_abdec"] stringByAppendingPathExtension:extension];
+}
+
+
 @end
 
 @implementation ambrosiaAppDelegate 
 
-@synthesize window, currentFirmware, ipswButton, pois0nButton, poisoning;
+
+@synthesize window, currentFirmware, ipswButton, pois0nButton, poisoning, downloadBar, downloadProgressField, instructionImage, instructionField ;
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
 	// Insert code here to initialize your application 
+	
+	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(statusChanged:) name:@"statusChanged" object:nil];
 }
 
 
 	//@"7F8651BF1E81548A719A94BFF92C9A01980A3F3EDF0BED5D3F70D5BF266C92F37A3F0D817A434B04E693D94AB619B23F"
+
+
+
+- (void)setDownloadProgress:(double)theProgress
+{
+	
+	if (theProgress == 0)
+	{
+		[downloadBar setIndeterminate:TRUE];
+		[downloadBar setHidden:FALSE];
+		[downloadBar setNeedsDisplay:YES];
+		[downloadBar setUsesThreadedAnimation:YES];
+		[downloadBar startAnimation:self];
+		return;
+	}
+	[downloadBar setIndeterminate:FALSE];
+	[downloadBar startAnimation:self];
+	[downloadBar setHidden:FALSE];
+	[downloadBar setNeedsDisplay:YES];
+	[downloadBar setDoubleValue:theProgress];
+}
+
+
+- (void)setInstructionText:(NSString *)instructions
+{
+	[instructionField setStringValue:instructions];
+	[instructionField setNeedsDisplay:YES];
+}
+
+- (void)setDownloadText:(NSString *)downloadString
+{
+	
+		//NSLog(@"setDownlodText:%@", downloadString);
+	[downloadProgressField setStringValue:downloadString];
+	[downloadProgressField setNeedsDisplay:YES];
+}
 
 
 - (IBAction)testRun:(id)sender
@@ -52,6 +100,8 @@
 		//NSString *theFile = [NSHomeDirectory() stringByAppendingPathComponent:@"Desktop/AppleTV2,1_4.3_8F202_Restore.ipsw"];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(unzipFinished:) name:@"unzipComplete" object:nil];
 	currentFirmware = [[AFirmware alloc] initWithFile:theFile];
+	[self setDownloadText:@"Unzipping ipsw...."];
+	[self showProgress];
 	
 
 	
@@ -60,6 +110,8 @@
 
 - (void)dealloc
 {
+	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
+		//[[NSNotificationCenter defaultCenter] removeObserver:self];
 	[currentFirmware release];
 	[super dealloc];
 }
@@ -70,11 +122,19 @@
  
  */
 
+- (void)statusChanged:(NSNotification *)n
+{
+	id userI = [n userInfo];
+	[self setDownloadText:[userI valueForKey:@"Status"]];
+	
+}
+
 
 
 - (NSDictionary *)sendKbagArray:(NSArray *)kbagArray
 {
 	NSLog(@"processing kbag array...");
+	[self setDownloadText:(@"processing kbag array...")];
 	NSString *logPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/AMBROSIA_Keys.log"];
 	[FM removeItemAtPath:logPath error:nil];
 	FILE* file = freopen([logPath fileSystemRepresentation], "a", stdout);
@@ -124,6 +184,7 @@
 	if (lineCount < 15)
 	{
 		NSLog(@"need to repois0n!!");
+		[self setDownloadText:@"i can haz fail: need to repois0n!!"];
 		return nil;
 	}
 	
@@ -232,7 +293,7 @@
 	
 	NSString *me = [NSString stringWithContentsOfFile:logPath encoding:NSASCIIStringEncoding error:nil];
 	me = [me stringByReplacingOccurrencesOfString:@"\0" withString:@""];
-	NSLog(@"ME: %@", me);
+		//NSLog(@"ME: %@", me);
 	
 	
 	
@@ -241,39 +302,39 @@
 	
 }
 
-- (void)setDownloadText:(NSString *)downloadText
-{
-	NSLog(@"%@", downloadText);
-}
 
-- (void)setInstructionText:(NSString *)downloadText
-{
-	NSLog(@"%@", downloadText);
-	
-}
-
-- (void)hideProgress
-{
-	[pois0nButton setEnabled:TRUE];
-	[ipswButton setEnabled:TRUE];
-}
 
 - (void)killiTunes
 {
 	
 }
 
+
+
 - (void)showProgress
 {
 	[pois0nButton setEnabled:FALSE];
 	[ipswButton setEnabled:FALSE];
-	
+		//	self.processing = TRUE;
+	[downloadBar startAnimation:self];
+	[downloadBar setHidden:FALSE];
+	[downloadBar setNeedsDisplay:TRUE];
+	[self setDownloadProgress:0];
+		
 }
 
-- (void)setDownloadProgress:(double)theProgress
+- (void)hideProgress
 {
-	
+	[pois0nButton setEnabled:TRUE];
+	[ipswButton setEnabled:TRUE];
+		//self.processing = FALSE;
+	[downloadBar stopAnimation:self];
+	[downloadBar setHidden:YES];
+	[downloadBar setNeedsDisplay:YES];
+
 }
+
+
 
 void print_progress(double progress, void* data) {
 	int i = 0;
@@ -402,8 +463,36 @@ void print_progress(double progress, void* data) {
 		}
 		
 	}
+	
+	/*
+	 
+	 ohhh yeh this needs some work, BUT it /SHOULD/ work!
+	 
+	 */
+	
+	[self setDownloadText:@"Decryping iBSS..."];
+	
+	[ACommon decryptRamdisk:[currentFirmware iBSS] toPath:[[currentFirmware iBSS] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"iBSS"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"iBSS"] valueForKey:@"k"]];
+	
+	[self setDownloadText:@"Decryping iBoot..."];
+	
+	[ACommon decryptRamdisk:[currentFirmware iBoot] toPath:[[currentFirmware iBoot] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"iBoot"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"iBoot"] valueForKey:@"k"]];
+	
+	[self setDownloadText:@"Decryping KernelCache..."];
+	
+	
+	[ACommon decryptRamdisk:[currentFirmware KernelCache] toPath:[[currentFirmware KernelCache] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"KernelCache"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"KernelCache"] valueForKey:@"k"]];
+
+	[self setDownloadText:@"Decryping LLB..."];
+	
+	[ACommon decryptRamdisk:[currentFirmware LLB] toPath:[[currentFirmware LLB] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"LLB"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"LLB"] valueForKey:@"k"]];
+	
+	
+		//iBSS, iBoot, kernelcache
+	
 	[currentFirmware release];
 	
+	[self hideProgress];
 	/*
 	NSString *outputFile = [[currentFirmware RestoreRamDisk] stringByDeletingPathExtension];
 	outputFile = [outputFile stringByAppendingString:@"_patched.dmg"];

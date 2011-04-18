@@ -19,6 +19,7 @@
 + (NSString *)applicationSupportFolder;
 + (NSString *)firmwarePath;
 + (NSString *)decryptFilesystemFromFirmware:(id)currentFirmware;
++ (void)statusChanged:(NSNotification *)n;
 @end
 
 

@@ -408,6 +408,16 @@
 
 }
 
++ (void)changeStatus:(NSString *)theStatus
+{
+	NSDictionary * userInfo = [NSDictionary dictionaryWithObjectsAndKeys: theStatus, @"Status", nil];
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"statusChanged" object:nil userInfo:userInfo deliverImmediately:YES];
+	
+}
+
+
+
+
 - (void)threadedUnzipFile:(NSDictionary *)theDict
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
@@ -431,6 +441,8 @@
 	[unzipTask launch];
 	[unzipTask waitUntilExit];
 	NSLog(@"unzip finished!");
+	[ACommon changeStatus:@"Unzip finished!"];
+	
 	
 	[[NSNotificationCenter defaultCenter] postNotificationName:@"unzipComplete" object:nil userInfo:theDict];
 	[pool release];
@@ -447,7 +459,8 @@
 	
 		
 		NSLog(@"decrypting: %@\n", [currentFirmware RestoreRamDisk]);
-		
+
+		[ACommon changeStatus:[NSString stringWithFormat:@"decrypting: %@\n", [currentFirmware RestoreRamDisk]]];
 		
 		
 		[ACommon decryptRamdisk:[currentFirmware RestoreRamDisk] toPath:outputFile withIV:[rdKeys valueForKey:@"iv"] key:[rdKeys valueForKey:@"k"]];
@@ -458,7 +471,7 @@
 		[ACommon decryptRamdisk:[currentFirmware RestoreRamDisk] toPath:outputFile withIV:nil key:nil];
 	}
 	
-	
+	[ACommon changeStatus:@"generating vfdecrypt key..."];
 	
 	NSLog(@"generating vfdecrypt key...\n");
 	
@@ -468,14 +481,18 @@
 	vfDecryptKey = [vfDecryptKey cleanedString];
 	
 	NSLog(@"vfdecrypt key: %@\n", vfDecryptKey);
+	
+	
 	if (vfDecryptKey != nil)
 	{
+		[ACommon changeStatus:[NSString stringWithFormat:@"decrypting filesystem: %@\n", [[currentFirmware OS] lastPathComponent]]];
 		NSLog(@"decrypting filesystem: %@\n", [currentFirmware OS]);
 		NSString *decrypted = [ACommon decryptFilesystem:[currentFirmware OS] withKey:vfDecryptKey];
 		NSString *mountedVolume = [ACommon mountImage:decrypted];
 		NSLog(@"mounted?: %@", mountedVolume);
 		if (mountedVolume == nil)
 		{
+			[ACommon changeStatus:@"invalid vfdecrypt key, trying to generate from update ramdisk!"];
 			NSLog(@"invalid vfdecrypt key, trying to generate from update ramdisk!");
 			[FM removeItemAtPath:decrypted error:nil];
 			NSString *updateRamdisk = [currentFirmware UpdateRamDisk];
@@ -489,21 +506,24 @@
 				if ([urd encrypted] == TRUE)
 				{
 					
+					[ACommon changeStatus:@"ramdisk is encrypted... finding kbag"];
+					
 					NSLog(@"ramdisk is encrypted... finding kbag");
 					
 					NSString *kbag2 = [urd keyBag];
 					
 					NSLog(@"decrypting keybag....");
-					
+					[ACommon changeStatus:@"decrypting keybag...."];
 					
 					NSDictionary *decryptedKbag2 = [ACommon decryptedKbag:kbag2];
 					
 					if (decryptedKbag2 == nil)
 					{
+						[ACommon changeStatus:@"bail!!!, gotz to repois0n!"];
 						NSLog(@"bail!!!, gotz to repois0n!");
 						return nil;
 					}
-					
+					[ACommon changeStatus:[NSString stringWithFormat:@"decrypting: %@", [currentFirmware UpdateRamDisk]]];
 					NSLog(@"decrypting: %@", [currentFirmware UpdateRamDisk]);
 					
 					[ACommon decryptRamdisk:[currentFirmware UpdateRamDisk] toPath:outputFile2 withIV:[decryptedKbag2 valueForKey:@"iv"] key:[decryptedKbag2 valueForKey:@"k"]];
@@ -515,12 +535,15 @@
 					
 				}
 				
+				[ACommon changeStatus:@"generating vfdecrypt key (take two)..."];
 				NSLog(@"generating vfdecrypt key (take two)...");
 				
 				NSString *vfDecryptKey2 = [ACommon genpassFromRamdisk:outputFile2 platform:[currentFirmware platform] andFilesystem:[currentFirmware OS]];
 				vfDecryptKey2 = [vfDecryptKey2 stringByReplacingOccurrencesOfString:@"\n" withString:@""];
 				vfDecryptKey2 = [vfDecryptKey2 substringFromIndex:14];
 				vfDecryptKey2 = [vfDecryptKey2 cleanedString];
+				
+				[ACommon changeStatus:[NSString stringWithFormat:@"vfdecrypt key take 2: %@", vfDecryptKey2]];
 				DebugLog(@"vfdecrypt key take 2: %@", vfDecryptKey2);
 				if (vfDecryptKey2 != nil)
 				{
@@ -530,6 +553,7 @@
 					if (mountedVolume2 != nil)
 					{
 						DebugLog(@"valid vfdecrypt found!: %@", vfDecryptKey);
+						[ACommon changeStatus:[NSString stringWithFormat:@"valid vfdecrypt found!: %@", vfDecryptKey]];
 						return vfDecryptKey2;
 					}
 				}
