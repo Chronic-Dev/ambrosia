@@ -11,7 +11,7 @@
 
 @implementation AFirmware
 
-@synthesize fwName, unzipLocation, filePath, vfDecryptKey;
+@synthesize fwName, unzipLocation, filePath, vfDecryptKey, buildIdentity;
 
 - (id)initWithFile:(NSString *)theFile
 {
@@ -19,6 +19,7 @@
 		
 		filePath = theFile;
 		fwName = [[theFile lastPathComponent] stringByDeletingPathExtension];
+		[fwName retain];
 		unzipLocation = [[ACommon firmwarePath]  stringByAppendingPathComponent:fwName];
 		if ([FM fileExistsAtPath:unzipLocation])
 		{
@@ -35,7 +36,31 @@
 	return self;
 }
 
+- (NSString *)plistPath
+{
+	NSString *starter = [self unzipLocation];
+	starter = [starter stringByAppendingPathComponent:fwName];
+	starter = [starter stringByAppendingPathExtension:@"plist"];
+	return starter;
+}
 
+
+/*
+ 
+ DeviceTree.k66ap.img3
+ LLB.k66ap.RELEASE.img3
+ applelogo-1280x720.s5l8930x.img3
+ batterycharging0.s5l8930x.img3
+ batterycharging1.s5l8930x.img3
+ batteryfull.s5l8930x.img3
+ batterylow0.s5l8930x.img3
+ batterylow1.s5l8930x.img3
+ glyphcharging.s5l8930x.img3
+ glyphplugin.s5l8930x.img3
+ iBoot.k66ap.RELEASE.img3
+ recoverymode-1280x720.s5l8930x.img3
+ 
+ */
 
 - (void)dealloc
 {
@@ -46,16 +71,40 @@
 	[super dealloc];
 }
 
+- (NSArray *)keyArray
+{
+	
+	return [NSArray arrayWithObjects:@"AppleLogo", @"BatteryCharging0", @"BatteryCharging1", @"BatteryFull", @"BatteryLow0", @"BatteryLow1", @"BatteryPlugin", @"DeviceTree", @"KernelCache", @"LLB", @"RecoveryMode", @"RestoreRamDisk", @"iBEC", @"iBSS", @"iBoot", nil];
+}
+
+-(NSArray *)manifestArray
+{
+	return [NSArray arrayWithObjects:[self AppleLogo], [self BatteryCharging0], [self BatteryCharging1], [self BatteryFull], [self BatteryLow0], [self BatteryLow1], [self BatteryPlugin], [self DeviceTree], [self KernelCache], [self LLB], [self RecoveryMode], [self RestoreRamDisk], [self iBEC], [self iBSS], [self iBoot], nil];
+}
+
+-(NSArray *)kbagArray
+{
+		//NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	NSMutableArray *myKbagArray = [[NSMutableArray alloc] init];
+	NSEnumerator *manifestEnum = [[self manifestArray] objectEnumerator];
+	id object = nil;
+	while (object = [manifestEnum nextObject])
+	{
+		AFirmwareFile *current = [[AFirmwareFile alloc] initWithFile:object];
+		NSString *kbag = [current keyBag];
+		NSLog(@"kbag: %@", kbag);
+		[myKbagArray addObject:kbag];
+		[current release];
+	}
+		//[pool release];
+	return [myKbagArray autorelease];
+}
 
 - (NSString *)AppleLogo
 {
 	return [[self unzipLocation] stringByAppendingPathComponent:[[[[self manifest] valueForKey:@"AppleLogo"] valueForKey:@"Info"] valueForKey:@"Path"]];
 }
 
-- (NSString *)BatteryCharging
-{
-	return [[self unzipLocation] stringByAppendingPathComponent:[[[[self manifest] valueForKey:@"BatteryCharging"] valueForKey:@"Info"] valueForKey:@"Path"]];
-}
 
 - (NSString *)BatteryCharging0
 {
@@ -70,11 +119,6 @@
 - (NSString *)BatteryFull
 {
 	return [[self unzipLocation] stringByAppendingPathComponent:[[[[self manifest] valueForKey:@"BatteryFull"] valueForKey:@"Info"] valueForKey:@"Path"]];
-}
-
-- (NSString *)BatteryLow
-{
-	return [[self unzipLocation] stringByAppendingPathComponent:[[[[self manifest] valueForKey:@"BatteryLow"] valueForKey:@"Info"] valueForKey:@"Path"]];
 }
 
 - (NSString *)BatteryLow0
@@ -186,6 +230,11 @@
 	return [[[[self restoreDictionary] valueForKey:@"DeviceMap"] objectAtIndex:0] valueForKey:@"Platform"];
 }
 
+- (NSString *)BoardConfig
+{
+	return [[[[self restoreDictionary] valueForKey:@"DeviceMap"] objectAtIndex:0] valueForKey:@"BoardConfig"];
+}
+
 - (NSString *)userRestoreRamdisk
 {
 	return [[[self restoreDictionary] valueForKey:@"RestoreRamDisks"] valueForKey:@"User"];
@@ -222,7 +271,7 @@
 - (NSDictionary *)VariantContents
 {
 	NSArray *buildIdentities = [[self buildManifest] objectForKey:@"BuildIdentities"];
-	NSDictionary *one = [[[buildIdentities objectAtIndex:0] valueForKey:@"Info"] valueForKey:@"VariantContents"];
+	NSDictionary *one = [[[buildIdentities objectAtIndex:buildIdentity] valueForKey:@"Info"] valueForKey:@"VariantContents"];
 	return one;
 	
 }
@@ -230,7 +279,7 @@
 - (NSDictionary *)VariantContentsTwo
 {
 	NSArray *buildIdentities = [[self buildManifest] objectForKey:@"BuildIdentities"];
-	NSDictionary *one = [[[buildIdentities objectAtIndex:1] valueForKey:@"Info"] valueForKey:@"VariantContents"];
+	NSDictionary *one = [[[buildIdentities objectAtIndex:buildIdentity+1] valueForKey:@"Info"] valueForKey:@"VariantContents"];
 	return one;
 	
 }
@@ -239,7 +288,7 @@
 - (NSDictionary *)manifest
 {
 	NSArray *buildIdentities = [[self buildManifest] objectForKey:@"BuildIdentities"];
-	NSDictionary *one = [buildIdentities objectAtIndex:0];
+	NSDictionary *one = [buildIdentities objectAtIndex:buildIdentity];
 	return [one valueForKey:@"Manifest"];
 	
 }
@@ -247,9 +296,33 @@
 - (NSDictionary *)manifestTwo
 {
 	NSArray *buildIdentities = [[self buildManifest] objectForKey:@"BuildIdentities"];
-	NSDictionary *one = [buildIdentities objectAtIndex:1];
+	NSDictionary *one = [buildIdentities objectAtIndex:buildIdentity+1];
 	return [one valueForKey:@"Manifest"];
 	
+}
+
+- (void)setBuildIdentity
+{
+	NSArray *buildIdentities = [[self buildManifest] objectForKey:@"BuildIdentities"];
+	NSString *bc = [self BoardConfig];
+		//NSLog(@"boardConfig: %@", bc);
+	
+	NSEnumerator *buildIdentityEnum = [buildIdentities objectEnumerator];
+	id currentObject = nil;
+	int currentIndex = 0;
+	while (currentObject = [buildIdentityEnum nextObject])
+	{
+		NSString *one = [[currentObject valueForKey:@"Info"] valueForKey:@"DeviceClass"];
+			//NSLog(@"one: %@", one);
+		if ([one isEqualToString:bc])
+		{
+				//NSLog(@"found im: %i", currentIndex);
+			buildIdentity = currentIndex;
+			return;
+		}
+		currentIndex++;
+		
+	}
 }
 
 @end

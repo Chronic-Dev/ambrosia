@@ -13,6 +13,10 @@
 		321D9F8C13579C190063757E /* ACommon.m in Sources */ = {isa = PBXBuildFile; fileRef = 321D9F8B13579C190063757E /* ACommon.m */; };
 		321D9FCB13579D4C0063757E /* bin in Resources */ = {isa = PBXBuildFile; fileRef = 321D9FC613579D4C0063757E /* bin */; };
 		321DA0321357A2940063757E /* AFirmware.m in Sources */ = {isa = PBXBuildFile; fileRef = 321DA0311357A2940063757E /* AFirmware.m */; };
+		32706127135BBD2C00EE420C /* libsyringe.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 32706125135BBD2C00EE420C /* libsyringe.a */; };
+		32706128135BBD2C00EE420C /* libusb-1.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 32706126135BBD2C00EE420C /* libusb-1.0.a */; };
+		3270612A135BBD6A00EE420C /* libstdc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 32706129135BBD6A00EE420C /* libstdc++.dylib */; };
+		3270617C135BBF2600EE420C /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3270617B135BBF2600EE420C /* IOKit.framework */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
@@ -37,6 +41,10 @@
 		321D9FC613579D4C0063757E /* bin */ = {isa = PBXFileReference; lastKnownFileType = folder; path = bin; sourceTree = "<group>"; };
 		321DA0301357A2940063757E /* AFirmware.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AFirmware.h; sourceTree = "<group>"; };
 		321DA0311357A2940063757E /* AFirmware.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AFirmware.m; sourceTree = "<group>"; };
+		32706125135BBD2C00EE420C /* libsyringe.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libsyringe.a; sourceTree = "<group>"; };
+		32706126135BBD2C00EE420C /* libusb-1.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = "libusb-1.0.a"; sourceTree = "<group>"; };
+		32706129135BBD6A00EE420C /* libstdc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libstdc++.dylib"; path = "usr/lib/gcc/i686-apple-darwin10/4.0.1/libstdc++.dylib"; sourceTree = SDKROOT; };
+		3270617B135BBF2600EE420C /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		8D1107310486CEB800E47090 /* ambrosia-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "ambrosia-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* ambrosia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ambrosia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -46,7 +54,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				32706127135BBD2C00EE420C /* libsyringe.a in Frameworks */,
+				32706128135BBD2C00EE420C /* libusb-1.0.a in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
+				3270612A135BBD6A00EE420C /* libstdc++.dylib in Frameworks */,
+				3270617C135BBF2600EE420C /* IOKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,6 +82,8 @@
 			isa = PBXGroup;
 			children = (
 				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
+				32706129135BBD6A00EE420C /* libstdc++.dylib */,
+				3270617B135BBF2600EE420C /* IOKit.framework */,
 			);
 			name = "Linked Frameworks";
 			sourceTree = "<group>";
@@ -77,6 +91,8 @@
 		1058C7A2FEA54F0111CA2CBB /* Other Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				32706125135BBD2C00EE420C /* libsyringe.a */,
+				32706126135BBD2C00EE420C /* libusb-1.0.a */,
 				29B97324FDCFA39411CA2CEA /* AppKit.framework */,
 				13E42FB307B3F0F600E4EEF1 /* CoreData.framework */,
 				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
@@ -254,6 +270,11 @@
 				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "DebugLog=NSLog";
 				INFOPLIST_FILE = "ambrosia-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SDKROOT)/usr/lib/gcc/i686-apple-darwin10/4.0.1\"",
+				);
 				PRODUCT_NAME = ambrosia;
 			};
 			name = Debug;
@@ -262,6 +283,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -271,6 +293,18 @@
 				GCC_PREPROCESSOR_DEFINITIONS_QUOTED_1 = "DebugLog=[NSNull\\ null];//DebugLog";
 				INFOPLIST_FILE = "ambrosia-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SDKROOT)/usr/lib/gcc/i686-apple-darwin10/4.0.1\"",
+				);
+				OTHER_LDFLAGS = (
+					"-lcurl",
+					"-lstdc++",
+					"-lz",
+					"-undefined",
+					dynamic_lookup,
+				);
 				PRODUCT_NAME = ambrosia;
 			};
 			name = Release;

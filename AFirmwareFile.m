@@ -11,14 +11,22 @@
 
 @implementation AFirmwareFile
 
-@synthesize IV, key, keyBag, fileType, decryptionKey, file, encrypted;
+@synthesize keyBag, file, encrypted;
 
 - (id)initWithFile:(NSString *)theFile
 {
 	if(self = [super init]) {
 
+		NSLog(@"initWithFile: %@", theFile);
 		file = theFile;
+
 		encrypted = [self grabKeybag];
+		//if (encrypted == TRUE)
+//		{
+//			NSDictionary *kbagDict = [ACommon decryptedKbag:keyBag];
+//			IV = [kbagDict valueForKey:@"iv"];
+//			key = [kbagDict valueForKey:@"k"];
+//		}
 	}
 	
 	return self;
@@ -46,14 +54,9 @@
 
 -(void)dealloc
 {
-	[IV release];
-	[key release];
-	[keyBag release];
-	[decryptionKey release];
-	IV = nil;
-	key = nil;
-	keyBag = nil;
-	decryptionKey = nil;
+		//[file release];
+		//[keyBag release];
+
 	[super dealloc];
 }
 

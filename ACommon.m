@@ -5,6 +5,28 @@
 
 @implementation ACommon
 
+/*
+ 
+ return [NSArray arrayWithObjects:@"AppleLogo", @"BatteryCharging", @"BatteryCharging0", @"BatteryCharging1", @"BatteryFull", @"BatteryLow", @"BatteryLow0", @"BatteryLow1", @"BatteryPlugin", @"DeviceTree", @"KernelCache", @"LLB", @"OS", @"RecoveryMode", @"RestoreDeviceTree", @"RestoreKernelCache", @"RestoreLogo", @"RestoreRamDisk", @"UpdateRamDisk", @"iBEC", @"iBSS", @"iBoot", nil];
+ 
+ */
+
+-(NSString *)grabKeybagForFile:(NSString *)theFile
+{
+	NSString *kbagProcess = [NSString stringWithFormat:@"\"%@\" \"%@\"", GRABKBAG, theFile];
+		//	DebugLog(@"grabKeybag: %@", kbagProcess);
+	NSString *returnString = [ACommon singleLineReturnForProcess:kbagProcess];
+	if (returnString != nil)
+	{
+		DebugLog(@"%@ has keybag: %@", [theFile lastPathComponent], returnString);
+		return returnString;
+	}
+	
+	DebugLog(@"%@ not encrypted!", [theFile lastPathComponent]);
+	return nil;
+	
+}
+
 + (id)sharedCommon
 {
 	static ACommon *shared = nil;
@@ -189,8 +211,8 @@
 	NSString *decrypted = [[[fileSystem stringByDeletingPathExtension] stringByAppendingString:@"_decrypt"] stringByAppendingPathExtension:@"dmg"];
 	[vfTask setArguments:[NSArray arrayWithObjects:@"-i", fileSystem, @"-k", fileSystemKey, @"-o", decrypted, nil]];
 		DebugLog(@"%@ %@\n", VFDECRYPT, [[vfTask arguments] componentsJoinedByString:@" "]);
-		//[vfTask setStandardError:NULLOUT];
-		//[vfTask setStandardOutput:NULLOUT];
+		[vfTask setStandardError:NULLOUT];
+		[vfTask setStandardOutput:NULLOUT];
 	[vfTask launch];
 	[vfTask waitUntilExit];
 	

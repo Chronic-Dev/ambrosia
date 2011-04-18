@@ -15,6 +15,7 @@
 	NSString *fwName;
 	NSString *unzipLocation;
 	NSString *vfDecryptKey;
+	int buildIdentity;
 
 }
 
@@ -22,23 +23,23 @@
 @property (nonatomic, retain) NSString *fwName;
 @property (nonatomic, retain) NSString *unzipLocation;
 @property (nonatomic, retain) NSString *vfDecryptKey;
+@property (readwrite, assign) int buildIdentity;
 
 - (NSDictionary *)manifest;
 - (NSDictionary *)buildManifest;
 - (NSDictionary *)restoreDictionary;
 
 - (NSString *)platform;
+- (NSString *)BoardConfig;
 
 - (NSString *)ProductBuildVersion;
 - (NSString *)ProductType;
 - (NSString *)ProductVersion;
 
 - (NSString *)AppleLogo;
-- (NSString *)BatteryCharging;
 - (NSString *)BatteryCharging0;
 - (NSString *)BatteryCharging1;
 - (NSString *)BatteryFull;
-- (NSString *)BatteryLow;
 - (NSString *)BatteryLow0;
 - (NSString *)BatteryLow1;
 - (NSString *)BatteryPlugin;
@@ -59,6 +60,14 @@
 - (NSDictionary *)VariantContents;
 - (NSDictionary *)VariantContentsTwo;
 - (NSDictionary *)manifestTwo;
+
+- (NSArray *)keyArray;
+- (void)setBuildIdentity;
+-(NSArray *)manifestArray;
+-(NSArray *)kbagArray;
+
+-(NSString *)plistPath;
+
 
 @end
 
