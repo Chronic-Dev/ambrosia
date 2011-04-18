@@ -275,6 +275,13 @@
 					"\"$(SRCROOT)\"",
 					"\"$(SDKROOT)/usr/lib/gcc/i686-apple-darwin10/4.0.1\"",
 				);
+				OTHER_LDFLAGS = (
+					"-lcurl",
+					"-lstdc++",
+					"-lz",
+					"-undefined",
+					dynamic_lookup,
+				);
 				PRODUCT_NAME = ambrosia;
 			};
 			name = Debug;

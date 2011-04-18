@@ -142,7 +142,6 @@
 	
 	NSEnumerator *theEnum = [keyArray objectEnumerator];
 	id currentKey = nil;
-	id keyLine = nil;
 
 	while (currentKey = [theEnum nextObject])
 	{
@@ -188,15 +187,7 @@
 - (IBAction)sendCommand:(id)sender
 {
 	
-		//	NSArray *ivK = [self runHelper:@"7F8651BF1E81548A719A94BFF92C9A01980A3F3EDF0BED5D3F70D5BF266C92F37A3F0D817A434B04E693D94AB619B23F"];
-		//	NSLog(@"ivk: %@", ivK);
-		//
-		//	NSDictionary *ivKDict = [NSDictionary dictionaryWithObjectsAndKeys:[ivK objectAtIndex:1], @"iv", [[ivK objectAtIndex:3] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]], @"k", nil];
-		//	NSLog(@"ivkDict: %@", ivKDict);
-		//	[ivKDict writeToFile:[NSHomeDirectory() stringByAppendingPathComponent:@"kbagkeydict.plist"] atomically:YES];
-		//	NSString *iv = [ivKDict valueForKey:@"iv"];
-		//	NSLog(@"iv: -%@- other side", iv);
-		//		return;
+
 	NSString *logPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/SP_Keys.log"];
 	[FM removeFileAtPath:logPath handler:nil];
 	FILE* file = freopen([logPath fileSystemRepresentation], "a", stdout);
@@ -211,15 +202,13 @@
 		
 	}
 	
-		//irecv_set_debug_level(20);
-		//irecv_set_interface(client, 0, 0);
+		
 	irecv_set_configuration(client, 1);
 
 	irecv_set_interface(client, 0, 0);
 	irecv_set_interface(client, 1, 1);
 	error = irecv_receive(client);
 	
-		//irecv_set_interface(client, 1, 0);	
 	
 	NSEnumerator *kbagEnum = [[self kbagArray] objectEnumerator];
 	id theObject = nil;
@@ -234,9 +223,7 @@
 	
 	
 	error = irecv_receive(client);
-		//debug("%s\n", irecv_strerror(error));
-		//quit = 1;
-		//}
+	
 	irecv_close(client);
 	irecv_exit();
 	
@@ -379,13 +366,8 @@ void print_progress(double progress, void* data) {
 
 - (void)unzipFinished:(NSNotification *)a
 {
-		//DebugLog(@"unzipFinished: %@", a);
-		//DebugLog(@"currentFirmware: %@", currentFirmware);
-		//NSDictionary *restoreDict = [currentFirmware restoreDictionary];
-		//DebugLog(@"restoreDict; %@", restoreDict);
-		//DebugLog(@"system restore image; %@", [currentFirmware systemRestoreImage]);
-		//DebugLog(@"ramdisk ; %@", [currentFirmware RestoreRamDisk]);
-		//DebugLog(@"RestoreKernelCache: %@", [currentFirmware LLB]);
+	DebugLog(@"unzipFinished: %@", a);
+
 	[currentFirmware setBuildIdentity];
 	
 	DebugLog(@"platform: %@", [currentFirmware platform]);
@@ -397,19 +379,18 @@ void print_progress(double progress, void* data) {
 	
 	if ([kbagArray count] > 1)
 	{
-		NSDictionary *keysDict = [self sendKbagArray:kbagArray];
+		id keysDict = [self sendKbagArray:kbagArray];
 		DebugLog(@"keysDict: %@", keysDict);
 		
 		NSString *firmwarePlist = [currentFirmware plistPath];
 		NSLog(@"%@", firmwarePlist);
+		
+		NSString *vfDecryptKey = [ACommon decryptFilesystemFromFirmware:currentFirmware];
+		[keysDict setValue:vfDecryptKey forKey:[[currentFirmware OS] lastPathComponent]];
 		[keysDict writeToFile:firmwarePlist atomically:YES];
 	}
 	
 	
-	
-		//NSLog(@"rd iv: %@ k: %@", [restoreRD IV], [restoreRD key]);
-	
-
 	/*
 	NSString *outputFile = [[currentFirmware RestoreRamDisk] stringByDeletingPathExtension];
 	outputFile = [outputFile stringByAppendingString:@"_patched.dmg"];

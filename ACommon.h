@@ -18,6 +18,7 @@
 + (BOOL)unzipFile:(NSString *)theFile toPath:(NSString *)newPath;
 + (NSString *)applicationSupportFolder;
 + (NSString *)firmwarePath;
+
 @end
 
 

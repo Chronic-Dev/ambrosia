@@ -325,4 +325,38 @@
 	}
 }
 
+-(NSDictionary *)keyRepository
+{
+	if ([FM fileExistsAtPath:[self plistPath]])
+		
+	{
+		NSLog(@"file exists at path: %@", [self plistPath]);
+		return [NSDictionary dictionaryWithContentsOfFile:[self plistPath]];
+		
+	}
+	
+	return nil;
+}
+
+- (BOOL)isDecrypted
+{
+	if ([FM fileExistsAtPath:[self plistPath]])
+		return TRUE;
+	
+	return FALSE;
+}
+
+
+-(NSDictionary *)ramdiskKey
+{
+	if ([self isDecrypted] == TRUE)
+	{
+		NSLog(@"isDecrypted!!");
+		NSDictionary *keyRepository = [self keyRepository];
+		NSLog(@"keyRepository: %@", keyRepository);
+		return [keyRepository valueForKey:@"RestoreRamDisk"];
+	}
+	return nil;
+}
+
 @end

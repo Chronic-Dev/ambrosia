@@ -67,7 +67,11 @@
 -(NSArray *)kbagArray;
 
 -(NSString *)plistPath;
+-(NSDictionary *)ramdiskKey;
 
+-(NSDictionary *)keyRepository; //final dictionary with iv's and k's
+
+-(BOOL)isDecrypted;
 
 @end
 

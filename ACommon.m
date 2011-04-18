@@ -11,6 +11,8 @@
  
  */
 
+
+
 -(NSString *)grabKeybagForFile:(NSString *)theFile
 {
 	NSString *kbagProcess = [NSString stringWithFormat:@"\"%@\" \"%@\"", GRABKBAG, theFile];
@@ -434,5 +436,106 @@
 	[pool release];
 }
 
-
++ (NSString *)decryptFilesystemFromFirmware:(AFirmware *)currentFirmware
+{
+	
+	NSString *outputFile = [[currentFirmware RestoreRamDisk] stringByDeletingPathExtension];
+	outputFile = [outputFile stringByAppendingString:@"_patched.dmg"];
+	NSDictionary *rdKeys = [currentFirmware ramdiskKey];
+	if (rdKeys != nil)
+	{
+	
+		
+		NSLog(@"decrypting: %@\n", [currentFirmware RestoreRamDisk]);
+		
+		
+		
+		[ACommon decryptRamdisk:[currentFirmware RestoreRamDisk] toPath:outputFile withIV:[rdKeys valueForKey:@"iv"] key:[rdKeys valueForKey:@"k"]];
+	} else {
+			//DebugLog(@"ivkDict: %@", decryptedKbag);
+		
+		DebugLog(@"no kbag! no encryption on ramdisk.\n");
+		[ACommon decryptRamdisk:[currentFirmware RestoreRamDisk] toPath:outputFile withIV:nil key:nil];
+	}
+	
+	
+	
+	NSLog(@"generating vfdecrypt key...\n");
+	
+	NSString *vfDecryptKey = [ACommon genpassFromRamdisk:outputFile platform:[currentFirmware platform] andFilesystem:[currentFirmware OS]];
+	vfDecryptKey = [vfDecryptKey stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+	vfDecryptKey = [vfDecryptKey substringFromIndex:14];
+	vfDecryptKey = [vfDecryptKey cleanedString];
+	
+	NSLog(@"vfdecrypt key: %@\n", vfDecryptKey);
+	if (vfDecryptKey != nil)
+	{
+		NSLog(@"decrypting filesystem: %@\n", [currentFirmware OS]);
+		NSString *decrypted = [ACommon decryptFilesystem:[currentFirmware OS] withKey:vfDecryptKey];
+		NSString *mountedVolume = [ACommon mountImage:decrypted];
+		NSLog(@"mounted?: %@", mountedVolume);
+		if (mountedVolume == nil)
+		{
+			NSLog(@"invalid vfdecrypt key, trying to generate from update ramdisk!");
+			[FM removeItemAtPath:decrypted error:nil];
+			NSString *updateRamdisk = [currentFirmware UpdateRamDisk];
+			if (updateRamdisk != nil)
+			{
+					//must've been a bad vfdecrypt key, lets try the other ramdisk (hoping there is one)
+				DebugLog(@"huzzah! there is an update ramdisk! %@ lets hope we have better luck with it!!", updateRamdisk);
+				AFirmwareFile *urd = [[AFirmwareFile alloc] initWithFile:updateRamdisk];
+				NSString *outputFile2 = [[currentFirmware UpdateRamDisk] stringByDeletingPathExtension];
+				outputFile2 = [outputFile2 stringByAppendingString:@"_patched.dmg"];
+				if ([urd encrypted] == TRUE)
+				{
+					
+					NSLog(@"ramdisk is encrypted... finding kbag");
+					
+					NSString *kbag2 = [urd keyBag];
+					
+					NSLog(@"decrypting keybag....");
+					
+					
+					NSDictionary *decryptedKbag2 = [ACommon decryptedKbag:kbag2];
+					
+					NSLog(@"decrypting: %@", [currentFirmware UpdateRamDisk]);
+					
+					[ACommon decryptRamdisk:[currentFirmware UpdateRamDisk] toPath:outputFile2 withIV:[decryptedKbag2 valueForKey:@"iv"] key:[decryptedKbag2 valueForKey:@"k"]];
+				} else {
+						//DebugLog(@"ivkDict: %@", decryptedKbag);
+					
+					DebugLog(@"no kbag! no encryption on ramdisk.");
+					[ACommon decryptRamdisk:[currentFirmware UpdateRamDisk] toPath:outputFile2 withIV:nil key:nil];
+					
+				}
+				
+				NSLog(@"generating vfdecrypt key (take two)...");
+				
+				NSString *vfDecryptKey2 = [ACommon genpassFromRamdisk:outputFile2 platform:[currentFirmware platform] andFilesystem:[currentFirmware OS]];
+				vfDecryptKey2 = [vfDecryptKey2 stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+				vfDecryptKey2 = [vfDecryptKey2 substringFromIndex:14];
+				vfDecryptKey2 = [vfDecryptKey2 cleanedString];
+				DebugLog(@"vfdecrypt key take 2: %@", vfDecryptKey2);
+				if (vfDecryptKey2 != nil)
+				{
+					NSString *decrypted2 = [ACommon decryptFilesystem:[currentFirmware OS] withKey:vfDecryptKey2];
+					NSString *mountedVolume2 = [ACommon mountImage:decrypted2];
+					NSLog(@"mounted?: %@", mountedVolume2);
+					if (mountedVolume2 != nil)
+					{
+						DebugLog(@"valid vfdecrypt found!: %@", vfDecryptKey);
+						return vfDecryptKey2;
+					}
+				}
+				
+			}
+			
+		} else {
+			
+			DebugLog(@"valid vfdecrypt found!: %@", vfDecryptKey);
+			return vfDecryptKey;
+		}
+	}
+	return nil;
+}
 @end
