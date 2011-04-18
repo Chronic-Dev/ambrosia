@@ -1,5 +1,6 @@
 build/Debug
 built/ambrosia.build
+*.dSYM
 ambrosia.xcodeproj/kevinbradley*
 ambrosia.xcodeproj/*pbxuser
 ambrosia.xcodeproj/*perspectivev3
