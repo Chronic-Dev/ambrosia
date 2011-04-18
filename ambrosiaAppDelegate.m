@@ -70,15 +70,11 @@
  
  */
 
-- (NSArray *)kbagArray 
-{
-	return [NSArray arrayWithObjects:@"B17EAEBA2845761183558B49905509FF671C58122438A331EB715F2FE44C70F5A00821BEC9A51AE3295D32E4E43F854B", @"8B4736C11779B6247395C79E9D23A58BB5448ED4F6F0D4B61459920E30303EBDA1DE0A5BB6FE679A9B392EE2E1775308", @"588CA181069297FBB4175C380735E3F3A50AC2DA971A1E4D0375457691A1560FBBC49B2E70E91671DC5960EA1CF8DAE7", @"76FE44A0288FB5F4974BFAF78D50ED28D471B4A247831D52CBBC18849CB500FDB7E089AA4AC814203CF752AA32E6E05B", @"DE3B1E98937F2ED65DC02036B8F0EB9ABAD83813A1FBD8F356AD0C4E492D0D8E9DF9E586F2A154243374FFCD6BE019B9", @"8870446AE8C43786A5A5F98D544C691CBBC89E8489EEA886A856A992E161DCF0503D2C9B4CEFBC2E3E826BC6D2B61D64", @"9504A98F412AD79BB8425F75F031E8BDF71D2FE3F7624E60EFBCF1957EDBB2C669F2728BE850B826363597BD392164FE", @"7A4188D676BAA4F433812F4FA5079BF5F72BE183AFECA3C530DD33B47ABC0223C22E6245153FBC7791B1E7F8597CF8ED", @"05165FD57D9FAF428AE117275C24F8CE76853B3777ADFBC5F74DEBAF10A53122528058CFDB7B6F51E8F423780AC207B0", @"C2DC6FDEE49B7B5830774980E813710A29ED484F6BA6296C3B73E8715223F327C5A32F1E7889A24647EA528465746F01", @"DD71210CFD7B14703070272732037485CB9D67B1320CB313E3AB9110838138566EBA483942D8F7FAE003FE388C919FC1", @"124E3838675F586F494365482B6DD6274B21F2EE9EE67B0C5B71CFFAC2B3A6D26547EBBF4D882E766E808169AF2C5EDA", nil];
-}
 
 
 - (NSDictionary *)sendKbagArray:(NSArray *)kbagArray
 {
-	NSLog(@"sending kbag array!! fingers crossed");
+	NSLog(@"processing kbag array...");
 	NSString *logPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/AMBROSIA_Keys.log"];
 	[FM removeFileAtPath:logPath handler:nil];
 	FILE* file = freopen([logPath fileSystemRepresentation], "a", stdout);
@@ -113,18 +109,17 @@
 	irecv_exit();
 	fclose(file);
 	
+	NSString *keyLog = [NSString stringWithContentsOfFile:logPath encoding:NSASCIIStringEncoding error:nil];
+	keyLog = [keyLog stringByReplacingOccurrencesOfString:@"\0" withString:@""];
+	DebugLog(@"AMBROSIA_Keys.log: %@", keyLog);
 	
-	NSString *me = [NSString stringWithContentsOfFile:logPath];
-	me = [me stringByReplacingOccurrencesOfString:@"\0" withString:@""];
-	NSLog(@"me: %@", me);
+	NSArray *rawkeyArray = [keyLog componentsSeparatedByString:@"\n"];
 	
-	NSArray *meArray = [me componentsSeparatedByString:@"\n"];
-	
-	NSLog(@"line count: %i", [meArray count]);
+	DebugLog(@"line count: %i", [rawkeyArray count]);
 	
 	int currentIndex = 0;
 	
-	int lineCount = [meArray count];
+	int lineCount = [rawkeyArray count];
 	
 	if (lineCount < 15)
 	{
@@ -134,13 +129,14 @@
 	
 	if (lineCount > 16)
 	{
-		NSLog(@"initial run!! need to adjust the numbers");
+		
 		currentIndex = lineCount - 16;
+		DebugLog(@"initial run!! currentIndex: %i",currentIndex);
 		
 	}
 	
 	NSArray *keyArray = [currentFirmware keyArray];
-	NSLog(@"keyArray count: %i", [keyArray count]);
+	DebugLog(@"keyArray count: %i", [keyArray count]);
 	
 	NSMutableDictionary *keys = [[NSMutableDictionary alloc] init];
 	
@@ -150,16 +146,33 @@
 
 	while (currentKey = [theEnum nextObject])
 	{
-		NSString *keyLine = [meArray objectAtIndex:currentIndex];
+		NSString *keyLine = [rawkeyArray objectAtIndex:currentIndex];
 		NSArray *keyComponents = [keyLine componentsSeparatedByString:@" "];
-		NSLog(@"keyComponents count: %i", [keyComponents count]);
-		if ([keyComponents count] > 2)
+		DebugLog(@"keyComponents count: %i", [keyComponents count]);
+		if ([keyComponents count] == 4)
 		{
 			NSString *iv = [keyComponents objectAtIndex:1];
+			
 			NSString *k = [keyComponents objectAtIndex:3];
-			[keys setObject:[NSDictionary dictionaryWithObjectsAndKeys:iv, @"iv", k, @"k", nil] forKey:currentKey];
+			
+			k = [k stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+			
+			k = [k cleanedString];
+			
+			DebugLog(@"klength: %i", [k length]);
+			
+			
+			
+			NSString *currentDict = [NSDictionary dictionaryWithObjectsAndKeys:iv, @"iv", k, @"k", nil];
+			DebugLog(@"currentDict: %@", currentDict);
+			if ([k length] > 0)
+			{
+				[keys setObject:currentDict forKey:currentKey];
+			}
+			
+			
 		} else {
-			NSLog(@"item not encrypted?: %@", currentKey);
+			DebugLog(@"item not encrypted?: %@", currentKey);
 		}
 		currentIndex++;
 		
@@ -385,7 +398,7 @@ void print_progress(double progress, void* data) {
 	if ([kbagArray count] > 1)
 	{
 		NSDictionary *keysDict = [self sendKbagArray:kbagArray];
-		NSLog(@"keysDict: %@", keysDict);
+		DebugLog(@"keysDict: %@", keysDict);
 		
 		NSString *firmwarePlist = [currentFirmware plistPath];
 		NSLog(@"%@", firmwarePlist);
@@ -396,7 +409,7 @@ void print_progress(double progress, void* data) {
 	
 		//NSLog(@"rd iv: %@ k: %@", [restoreRD IV], [restoreRD key]);
 	
-	return;
+
 	/*
 	NSString *outputFile = [[currentFirmware RestoreRamDisk] stringByDeletingPathExtension];
 	outputFile = [outputFile stringByAppendingString:@"_patched.dmg"];

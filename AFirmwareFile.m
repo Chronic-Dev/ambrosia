@@ -17,7 +17,7 @@
 {
 	if(self = [super init]) {
 
-		NSLog(@"initWithFile: %@", theFile);
+		DebugLog(@"initWithFile: %@", theFile);
 		file = theFile;
 
 		encrypted = [self grabKeybag];

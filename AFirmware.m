@@ -92,7 +92,7 @@
 	{
 		AFirmwareFile *current = [[AFirmwareFile alloc] initWithFile:object];
 		NSString *kbag = [current keyBag];
-		NSLog(@"kbag: %@", kbag);
+		DebugLog(@"kbag: %@", kbag);
 		[myKbagArray addObject:kbag];
 		[current release];
 	}
