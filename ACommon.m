@@ -460,7 +460,7 @@
 		
 		NSLog(@"decrypting: %@\n", [currentFirmware RestoreRamDisk]);
 
-		[ACommon changeStatus:[NSString stringWithFormat:@"decrypting: %@\n", [currentFirmware RestoreRamDisk]]];
+		[ACommon changeStatus:[NSString stringWithFormat:@"decrypting: %@\n", [[currentFirmware RestoreRamDisk]lastPathComponent]]];
 		
 		
 		[ACommon decryptRamdisk:[currentFirmware RestoreRamDisk] toPath:outputFile withIV:[rdKeys valueForKey:@"iv"] key:[rdKeys valueForKey:@"k"]];

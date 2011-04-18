@@ -32,7 +32,17 @@
 @property (assign) AFirmware *currentFirmware;
 @property (readwrite, assign) BOOL poisoning;
 
+-(NSArray *)kbagArray;
+- (void)setDownloadProgress:(double)theProgress;
+- (void)setInstructionText:(NSString *)instructions;
+- (void)setDownloadText:(NSString *)downloadString;
 - (IBAction)sendCommand:(id)sender;
 - (IBAction)testRun:(id)sender;
 - (void)startOverMan;
+- (void)killiTunes;
+- (void)showProgress;
+- (void)hideProgress;
+- (int)inject;
+- (IBAction)poison:(id)sender;
+- (IBAction)sendCommand:(id)sender;
 @end

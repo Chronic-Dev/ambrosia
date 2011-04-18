@@ -96,8 +96,7 @@
 	[op runModalForTypes:[NSArray arrayWithObject:@"ipsw"]];
 	NSString *theFile = [op filename];
 	
-		//NSString *theFile = [NSHomeDirectory() stringByAppendingPathComponent:@"Downloads/iPhone3,1_4.3.2_8H7_Restore/kernelcache.release.k48"];
-		//NSString *theFile = [NSHomeDirectory() stringByAppendingPathComponent:@"Desktop/AppleTV2,1_4.3_8F202_Restore.ipsw"];
+
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(unzipFinished:) name:@"unzipComplete" object:nil];
 	currentFirmware = [[AFirmware alloc] initWithFile:theFile];
 	[self setDownloadText:@"Unzipping ipsw...."];
@@ -244,12 +243,16 @@
 
 }
 
+- (NSArray *)kbagArray
+{
+	return nil; //deprecated, this was here from when i was testing how to interact with the iRecovery shell
+}
 
-- (IBAction)sendCommand:(id)sender
+- (IBAction)sendCommand:(id)sender //deprecated, this was here from when i was testing how to interact with the iRecovery shell, may find some other implementation in future here.
 {
 	
 
-	NSString *logPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/SP_Keys.log"];
+	NSString *logPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/AMBROSIA_Keys.log"];
 	[FM removeItemAtPath:logPath error:nil];
 	FILE* file = freopen([logPath fileSystemRepresentation], "a", stdout);
 
@@ -279,25 +282,16 @@
 		error = irecv_send_command(client, [newObject UTF8String]);
 	}
 	
-	
-	
-	
-	
+
 	error = irecv_receive(client);
 	
 	irecv_close(client);
-	irecv_exit();
-	
+	irecv_exit();	
 	fclose(file);
 	
-	
-	NSString *me = [NSString stringWithContentsOfFile:logPath encoding:NSASCIIStringEncoding error:nil];
-	me = [me stringByReplacingOccurrencesOfString:@"\0" withString:@""];
-		//NSLog(@"ME: %@", me);
-	
-	
-	
-	
+	NSString *output = [NSString stringWithContentsOfFile:logPath encoding:NSASCIIStringEncoding error:nil];
+	output = [output stringByReplacingOccurrencesOfString:@"\0" withString:@""];
+		//NSLog(@"output: %@", output);
 	
 	
 }
@@ -453,12 +447,14 @@ void print_progress(double progress, void* data) {
 		[keysDict setValue:vfDecryptKey forKey:@"vfdecrypt"];
 		if (keysDict != nil)
 		{
+			[self setDownloadText:@"Creating fw plist..."];
 			[keysDict writeToFile:firmwarePlist atomically:YES];
 			[[NSWorkspace sharedWorkspace] openFile:firmwarePlist];
+			[self setDownloadText:@"Creating wiki text..."];
 			NSString *convertForWiki = [currentFirmware convertForWiki];
 				//NSLog(@"convertForWiki: %@", convertForWiki);			
 			NSString *wikiPath = [currentFirmware wikiPath];
-			[convertForWiki writeToFile:wikiPath atomically:YES];
+			[convertForWiki writeToFile:wikiPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 			[[NSWorkspace sharedWorkspace] openFile:wikiPath];
 		}
 		
@@ -488,114 +484,14 @@ void print_progress(double progress, void* data) {
 	[ACommon decryptRamdisk:[currentFirmware LLB] toPath:[[currentFirmware LLB] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"LLB"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"LLB"] valueForKey:@"k"]];
 	
 	
+	[self setDownloadText:@"Finished!!"];
+	
 		//iBSS, iBoot, kernelcache
 	
 	[currentFirmware release];
 	
 	[self hideProgress];
-	/*
-	NSString *outputFile = [[currentFirmware RestoreRamDisk] stringByDeletingPathExtension];
-	outputFile = [outputFile stringByAppendingString:@"_patched.dmg"];
-	if ([restoreRD encrypted] == TRUE)
-	{
-		NSLog(@"ramdisk is encrypted... finding kbag\n");
 		
-		NSString *kbag = [restoreRD keyBag];
-		
-		NSLog(@"decrypting keybag....\n");
-		
-		NSDictionary *decryptedKbag = [ACommon decryptedKbag:kbag];
-		
-		if (decryptedKbag == nil)
-		{
-			NSLog(@"FAIL!!!");
-			[self startOverMan];
-			return;
-		}
-		
-		NSLog(@"decrypting: %@\n", [currentFirmware RestoreRamDisk]);
-		
-		
-		
-		[ACommon decryptRamdisk:[currentFirmware RestoreRamDisk] toPath:outputFile withIV:[decryptedKbag valueForKey:@"iv"] key:[decryptedKbag valueForKey:@"k"]];
-	} else {
-			//DebugLog(@"ivkDict: %@", decryptedKbag);
-
-		DebugLog(@"no kbag! no encryption on ramdisk.\n");
-		[ACommon decryptRamdisk:[currentFirmware RestoreRamDisk] toPath:outputFile withIV:nil key:nil];
-	}
-	
-	
-
-	NSLog(@"generating vfdecrypt key...\n");
-	
-	NSString *vfDecryptKey = [ACommon genpassFromRamdisk:outputFile platform:[currentFirmware platform] andFilesystem:[currentFirmware OS]];
-	vfDecryptKey = [vfDecryptKey stringByReplacingOccurrencesOfString:@"\n" withString:@""];
-	vfDecryptKey = [vfDecryptKey substringFromIndex:14];
-		vfDecryptKey = [vfDecryptKey cleanedString];
-
-		NSLog(@"vfdecrypt key: %@\n", vfDecryptKey);
-	if (vfDecryptKey != nil)
-	{
-		NSLog(@"decrypting filesystem: %@\n", [currentFirmware OS]);
-		NSString *decrypted = [ACommon decryptFilesystem:[currentFirmware OS] withKey:vfDecryptKey];
-		NSString *mountedVolume = [ACommon mountImage:decrypted];
-		NSLog(@"mounted?: %@", mountedVolume);
-		if (mountedVolume == nil)
-		{
-			NSLog(@"invalid vfdecrypt key, trying to generate from update ramdisk!");
-			[FM removeItemAtPath:decrypted error:nil];
-			NSString *updateRamdisk = [currentFirmware UpdateRamDisk];
-			if (updateRamdisk != nil)
-			{
-				//must've been a bad vfdecrypt key, lets try the other ramdisk (hoping there is one)
-				DebugLog(@"huzzah! there is an update ramdisk! %@ lets hope we have better luck with it!!", updateRamdisk);
-				AFirmwareFile *urd = [[AFirmwareFile alloc] initWithFile:updateRamdisk];
-				NSString *outputFile2 = [[currentFirmware UpdateRamDisk] stringByDeletingPathExtension];
-				outputFile2 = [outputFile2 stringByAppendingString:@"_patched.dmg"];
-				if ([urd encrypted] == TRUE)
-				{
-					
-					NSLog(@"ramdisk is encrypted... finding kbag");
-				
-					NSString *kbag2 = [urd keyBag];
-					
-					NSLog(@"decrypting keybag....");
-		
-					
-					NSDictionary *decryptedKbag2 = [ACommon decryptedKbag:kbag2];
-					
-					NSLog(@"decrypting: %@", [currentFirmware UpdateRamDisk]);
-					
-					[ACommon decryptRamdisk:[currentFirmware UpdateRamDisk] toPath:outputFile2 withIV:[decryptedKbag2 valueForKey:@"iv"] key:[decryptedKbag2 valueForKey:@"k"]];
-				} else {
-						//DebugLog(@"ivkDict: %@", decryptedKbag);
-					
-					DebugLog(@"no kbag! no encryption on ramdisk.");
-					[ACommon decryptRamdisk:[currentFirmware UpdateRamDisk] toPath:outputFile2 withIV:nil key:nil];
-					
-				}
-				
-				NSLog(@"generating vfdecrypt key (take two)...");
-				
-				NSString *vfDecryptKey2 = [ACommon genpassFromRamdisk:outputFile2 platform:[currentFirmware platform] andFilesystem:[currentFirmware OS]];
-				vfDecryptKey2 = [vfDecryptKey2 stringByReplacingOccurrencesOfString:@"\n" withString:@""];
-				vfDecryptKey2 = [vfDecryptKey2 substringFromIndex:14];
-				vfDecryptKey2 = [vfDecryptKey2 cleanedString];
-				DebugLog(@"vfdecrypt key take 2: %@", vfDecryptKey2);
-				if (vfDecryptKey2 != nil)
-				{
-					NSString *decrypted2 = [ACommon decryptFilesystem:[currentFirmware OS] withKey:vfDecryptKey2];
-					NSString *mountedVolume2 = [ACommon mountImage:decrypted2];
-					NSLog(@"mounted?: %@", mountedVolume2);
-				}
-				
-			}
-				
-		}
-	}
-	 */
-	
 	[self startOverMan];
 }
 

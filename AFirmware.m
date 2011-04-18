@@ -69,7 +69,7 @@
 	
 		 [wikiString appendString:[NSString stringWithFormat:@"* '''IV''': %@\n",[[[self keyRepository] valueForKey:@"RestoreRamDisk"] valueForKey:@"iv"]]];
 		 
-		 [wikiString appendString:[NSString stringWithFormat:@"* '''K''': %@\n",[[[self keyRepository] valueForKey:@"RestoreRamDisk"] valueForKey:@"k"]]];
+		 [wikiString appendString:[NSString stringWithFormat:@"* '''K''': %@\n\n",[[[self keyRepository] valueForKey:@"RestoreRamDisk"] valueForKey:@"k"]]];
 		
 		NSEnumerator *theEnum = [[self keyArray] objectEnumerator];
 		
