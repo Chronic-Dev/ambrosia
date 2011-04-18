@@ -74,6 +74,8 @@
 -(BOOL)isDecrypted;
 
 -(NSString *)vfDecryptKey;
+- (NSString *)convertForWiki;
+- (NSString *)wikiPath;
 
 @end
 

@@ -391,10 +391,15 @@ void print_progress(double progress, void* data) {
 		{
 			[keysDict writeToFile:firmwarePlist atomically:YES];
 			[[NSWorkspace sharedWorkspace] openFile:firmwarePlist];
+			NSString *convertForWiki = [currentFirmware convertForWiki];
+				//NSLog(@"convertForWiki: %@", convertForWiki);			
+			NSString *wikiPath = [currentFirmware wikiPath];
+			[convertForWiki writeToFile:wikiPath atomically:YES];
+			[[NSWorkspace sharedWorkspace] openFile:wikiPath];
 		}
 		
 	}
-	
+	[currentFirmware release];
 	
 	/*
 	NSString *outputFile = [[currentFirmware RestoreRamDisk] stringByDeletingPathExtension];
