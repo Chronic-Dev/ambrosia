@@ -11,7 +11,7 @@
 
 @implementation AFirmware
 
-@synthesize fwName, unzipLocation, filePath, vfDecryptKey, buildIdentity;
+@synthesize fwName, unzipLocation, filePath, vfDecryptKey, buildIdentity, mountVolume;
 
 - (id)initWithFile:(NSString *)theFile
 {
@@ -52,6 +52,27 @@
 	return starter;
 }
 
+- (NSString *)privateFrameworksPath;
+{
+	NSString *pf = [[self unzipLocation] stringByAppendingPathComponent:@"PrivateFrameworks"];
+	if(![FM fileExistsAtPath:pf])
+	{
+		[FM createDirectoryAtPath:pf attributes:nil];
+	}
+	
+	return pf;
+}
+
+- (NSString *)frameworksPath;
+{
+	NSString *pf = [[self unzipLocation] stringByAppendingPathComponent:@"Frameworks"];
+	if(![FM fileExistsAtPath:pf])
+	{
+		[FM createDirectoryAtPath:pf attributes:nil];
+	}
+	
+	return pf;
+}
 
 - (NSString *)convertForWiki
 {
@@ -448,7 +469,7 @@
 	if ([FM fileExistsAtPath:[self plistPath]])
 		
 	{
-		NSLog(@"file exists at path: %@", [self plistPath]);
+			//NSLog(@"file exists at path: %@", [self plistPath]);
 		return [NSDictionary dictionaryWithContentsOfFile:[self plistPath]];
 		
 	}

@@ -16,6 +16,7 @@
 	NSString *unzipLocation;
 	NSString *vfDecryptKey;
 	int buildIdentity;
+	NSString *mountVolume;
 
 }
 
@@ -24,6 +25,7 @@
 @property (nonatomic, retain) NSString *unzipLocation;
 @property (nonatomic, retain) NSString *vfDecryptKey;
 @property (readwrite, assign) int buildIdentity;
+@property (nonatomic, retain) NSString *mountVolume;
 
 - (NSDictionary *)manifest;
 - (NSDictionary *)buildManifest;
@@ -76,6 +78,9 @@
 -(NSString *)vfDecryptKey;
 - (NSString *)convertForWiki;
 - (NSString *)wikiPath;
+- (NSString *)privateFrameworksPath;
+- (NSString *)frameworksPath;
+
 
 @end
 

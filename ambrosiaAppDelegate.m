@@ -47,6 +47,7 @@
 	// Insert code here to initialize your application 
 	
 	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(statusChanged:) name:@"statusChanged" object:nil];
+	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(updateCF:) name:@"updateCF" object:nil];
 }
 
 
@@ -128,6 +129,15 @@
 	
 }
 
+- (void)updateCF:(NSNotification *)n
+{
+	
+	id userI = [n userInfo];
+	NSLog(@"updateCF: %@",userI );
+	[currentFirmware setMountVolume:[userI valueForKey:@"mountVolume"]];
+	
+	
+}
 
 
 - (NSDictionary *)sendKbagArray:(NSArray *)kbagArray
@@ -443,11 +453,53 @@ void print_progress(double progress, void* data) {
 		{
 			[keysDict writeToFile:firmwarePlist atomically:YES];
 		}
-		NSString *vfDecryptKey = [ACommon decryptFilesystemFromFirmware:currentFirmware];
+		NSDictionary *decDict = [ACommon decryptFilesystemFromFirmware:currentFirmware];
+		
+		NSString *vfDecryptKey = [decDict valueForKey:@"vfdecrypt"];
+		NSString *mountVolume = [decDict valueForKey:@"mountVolume"];
+		
+		NSLog(@"mountVolume: %@", mountVolume);
+		
 		[keysDict setValue:vfDecryptKey forKey:@"vfdecrypt"];
 		if (keysDict != nil)
 		{
 			[self setDownloadText:@"Creating fw plist..."];
+			
+			[keysDict setValue:[currentFirmware unzipLocation] forKey:@"unzipLocation"];
+			[keysDict setValue:[NSNumber numberWithInt:[currentFirmware buildIdentity]] forKey:@"buildIdentity"];
+
+			
+			if (mountVolume != nil)
+			{
+				[keysDict setValue:mountVolume forKey:@"mountVolume"];
+				NSArray *staticCacheList = [ACommon dyldcacheContentsFromVolume:mountVolume];
+				NSMutableArray *cacheList = [[NSMutableArray alloc] initWithArray:staticCacheList];
+				[keysDict setValue:staticCacheList forKey:@"dyldcache"];
+				DebugLog(@"cacheList: %@", cacheList);
+				DebugLog(@"cacheListCount: %i", [cacheList count]);
+				NSPredicate *pfPredicate = [NSPredicate predicateWithFormat:@"SELF BEGINSWITH[cd] '/System/Library/PrivateFrameworks'"];//
+				[cacheList filterUsingPredicate:pfPredicate];
+				DebugLog(@"Private Frameworks: %@", cacheList);
+				DebugLog(@"Private Frameworks count: %i", [cacheList count]);
+				
+				[self setDownloadText:@"Dumping PrivateFrameworks Headers..."];
+				[self processPFHeaders:cacheList fromCache:[ACommon dyldcacheFileFromVolume:mountVolume]];
+				[cacheList removeAllObjects];
+				[cacheList addObjectsFromArray:staticCacheList];
+				
+				NSPredicate *fPredicate = [NSPredicate predicateWithFormat:@"SELF BEGINSWITH[cd] '/System/Library/Frameworks'"];//
+				[cacheList filterUsingPredicate:fPredicate];
+				DebugLog(@"Frameworks: %@", cacheList);
+				DebugLog(@"Frameworks count: %i", [cacheList count]);
+				[self setDownloadText:@"Dumping Frameworks Headers..."];
+				[self processFHeaders:cacheList fromCache:[ACommon dyldcacheFileFromVolume:mountVolume]];
+				
+					
+				
+				
+			}
+			
+			
 			[keysDict writeToFile:firmwarePlist atomically:YES];
 			[[NSWorkspace sharedWorkspace] openFile:firmwarePlist];
 			[self setDownloadText:@"Creating wiki text..."];
@@ -456,6 +508,7 @@ void print_progress(double progress, void* data) {
 			NSString *wikiPath = [currentFirmware wikiPath];
 			[convertForWiki writeToFile:wikiPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 			[[NSWorkspace sharedWorkspace] openFile:wikiPath];
+			
 		}
 		
 	}
@@ -493,6 +546,39 @@ void print_progress(double progress, void* data) {
 	[self hideProgress];
 		
 	[self startOverMan];
+}
+
+- (void)processPFHeaders:(NSArray *)cacheArray fromCache:(NSString *)dyldcacheFile
+
+{
+	NSEnumerator *frameworkEnum = [cacheArray objectEnumerator];
+	id currentFramework = nil;
+	while (currentFramework = [frameworkEnum nextObject]) {
+		if (![[currentFramework pathExtension] isEqualToString:@"dylib"])
+		{
+			NSString *newName = [[[currentFirmware privateFrameworksPath] stringByAppendingPathComponent:[currentFramework lastPathComponent]] stringByAppendingPathExtension:@"framework/Headers/"];
+			[FM createDirectoryAtPath:newName withIntermediateDirectories:YES attributes:nil error:nil];
+			NSArray *taskArguments = [NSArray arrayWithObjects:@"-pabkkzARH", @"-o", newName, @"-d", dyldcacheFile, currentFramework, nil];
+			[ACommon returnForTask:CDC withArguments:taskArguments];
+		}
+		
+	}
+}
+
+- (void)processFHeaders:(NSArray *)cacheArray fromCache:(NSString *)dyldcacheFile
+
+{
+	NSEnumerator *frameworkEnum = [cacheArray objectEnumerator];
+	id currentFramework = nil;
+	while (currentFramework = [frameworkEnum nextObject]) {
+		if (![[currentFramework pathExtension] isEqualToString:@"dylib"])
+		{
+			NSString *newName = [[[currentFirmware frameworksPath] stringByAppendingPathComponent:[currentFramework lastPathComponent]] stringByAppendingPathExtension:@"framework/Headers/"];
+			[FM createDirectoryAtPath:newName withIntermediateDirectories:YES attributes:nil error:nil];
+			NSArray *taskArguments = [NSArray arrayWithObjects:@"-pabkkzARH", @"-o", newName, @"-d", dyldcacheFile, currentFramework, nil];
+			[ACommon returnForTask:CDC withArguments:taskArguments];
+		}
+	}
 }
 
 - (void)startOverMan

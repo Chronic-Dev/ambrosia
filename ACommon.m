@@ -38,6 +38,50 @@
 	return shared;
 }
 
++ (NSString *)dyldcacheFileFromVolume:(NSString *)theVolume
+{
+	NSString *dyldcacheFolder = [theVolume stringByAppendingPathComponent:@"System/Library/Caches/com.apple.dyld"];
+	DebugLog(@"dyldcacheFolder: %@",dyldcacheFolder );
+	NSArray *cacheFiles = [FM contentsOfDirectoryAtPath:dyldcacheFolder error:nil];
+	DebugLog(@"cacheFiles: %@", cacheFiles);
+	
+	if ([cacheFiles count] > 1)
+	{
+		NSEnumerator *cacheEnum = [cacheFiles objectEnumerator];
+		id theObject = nil;
+		while (theObject = [cacheEnum nextObject]) {
+			
+			if ([theObject length] > 17) 
+			{
+				NSString *substrg = [theObject substringToIndex:17];
+				DebugLog(@"substrg: %@", substrg);
+				
+				if ([substrg isEqualToString:@"dyld_shared_cache"])
+				{
+					return [dyldcacheFolder stringByAppendingPathComponent:theObject];
+					
+				}
+			}
+				//dyld_shared_cache_armv7
+			
+		}
+	} else {
+		
+		return [dyldcacheFolder stringByAppendingPathComponent:[cacheFiles objectAtIndex:0]];
+		
+	}
+	
+	return nil;
+}
+
++ (NSArray *)dyldcacheContentsFromVolume:(NSString *)theVolume
+{
+	NSString *dyldcacheFile = [self dyldcacheFileFromVolume:theVolume];
+	return [ACommon returnForTask:DYLDCACHE withArguments:[NSArray arrayWithObjects:@"-l", dyldcacheFile, nil]];
+}
+
+
+
 + (ACommon *)sharedInstance
 {
     return [[self alloc] init];
@@ -245,6 +289,47 @@
     return [s stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 }
 
++ (NSArray *)returnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments
+{
+	DebugLog(@"%@ %@", taskBinary, [taskArguments componentsJoinedByString:@" "]);
+	NSTask *task = [[NSTask alloc] init];
+	NSPipe *pipe = [[NSPipe alloc] init];
+	NSFileHandle *handle = [pipe fileHandleForReading];
+	
+	[task setLaunchPath:taskBinary];
+	[task setArguments:taskArguments];
+	[task setStandardOutput:pipe];
+	[task setStandardError:pipe];
+	
+	[task launch];
+	
+	NSData *outData = nil;
+    NSString *temp = nil;
+    NSMutableArray *lineArray = [[NSMutableArray alloc] init];
+	
+	
+    while((outData = [handle readDataToEndOfFile]) && [outData length])
+    {
+			// temp = [[[NSString alloc] initWithData:outData encoding:NSASCIIStringEncoding] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		temp = [[NSString alloc] initWithData:outData encoding:NSASCIIStringEncoding];
+		DebugLog(@"temp length: %i", [temp length]);
+			//[lineArray addObject:temp];
+		[lineArray addObjectsFromArray:[temp componentsSeparatedByString:@"\n"]];
+		[temp release];
+    }
+	
+	
+	
+	DebugLog(@"lineArray: %@", lineArray);
+	[handle closeFile];
+	[task release];
+	
+	task = nil;
+	
+	return [lineArray autorelease];
+	
+}
+
 + (NSArray *)runHelper:(NSString *)theKbag
 {
 	
@@ -416,6 +501,12 @@
 }
 
 
++ (void)updateMountVolume:(NSString *)updateMV
+{
+	NSDictionary * userInfo = [NSDictionary dictionaryWithObjectsAndKeys: updateMV, @"mountVolume", nil];
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"updateCF" object:nil userInfo:userInfo deliverImmediately:YES];
+}
+
 
 
 - (void)threadedUnzipFile:(NSDictionary *)theDict
@@ -448,7 +539,7 @@
 	[pool release];
 }
 
-+ (NSString *)decryptFilesystemFromFirmware:(id)currentFirmware
++ (NSDictionary *)decryptFilesystemFromFirmware:(id)currentFirmware
 {
 	
 	NSString *outputFile = [[currentFirmware RestoreRamDisk] stringByDeletingPathExtension];
@@ -554,7 +645,9 @@
 					{
 						DebugLog(@"valid vfdecrypt found!: %@", vfDecryptKey);
 						[ACommon changeStatus:[NSString stringWithFormat:@"valid vfdecrypt found!: %@", vfDecryptKey]];
-						return vfDecryptKey2;
+							//[ACommon updateMountVolume:mountedVolume2];
+							//return vfDecryptKey2;
+						return [NSDictionary dictionaryWithObjectsAndKeys:vfDecryptKey2, @"vfdecrypt", mountedVolume2, @"mountVolume", nil];
 					}
 				}
 				
@@ -563,7 +656,9 @@
 		} else {
 			
 			DebugLog(@"valid vfdecrypt found!: %@", vfDecryptKey);
-			return vfDecryptKey;
+				//[ACommon updateMountVolume:mountedVolume];
+			return [NSDictionary dictionaryWithObjectsAndKeys:vfDecryptKey, @"vfdecrypt", mountedVolume, @"mountVolume", nil];
+				//return vfDecryptKey;
 		}
 	}
 	return nil;

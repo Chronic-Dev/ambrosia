@@ -18,8 +18,9 @@
 + (BOOL)unzipFile:(NSString *)theFile toPath:(NSString *)newPath;
 + (NSString *)applicationSupportFolder;
 + (NSString *)firmwarePath;
-+ (NSString *)decryptFilesystemFromFirmware:(id)currentFirmware;
++ (NSDictionary *)decryptFilesystemFromFirmware:(id)currentFirmware;
 + (void)changeStatus:(NSString *)theStatus;
++ (NSArray *)returnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments;
 @end
 
 
