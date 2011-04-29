@@ -425,8 +425,25 @@ void print_progress(double progress, void* data) {
 
 - (IBAction)poison:(id)sender
 {
-
+	irecv_error_t error = 0;
+	irecv_init();
+	irecv_client_t client = NULL;
+	if (irecv_open(&client) != IRECV_E_SUCCESS)
+	{
+		NSLog(@"fail!");
+		return;
+		
+	}
+	
+	error = irecv_send_command(client, "setenv boot-args 2");
+	debug("%s\n", irecv_strerror(error));
+	
+	error = irecv_send_command(client, "saveenv");
+	debug("%s\n", irecv_strerror(error));
+	irecv_close(client);
+	irecv_exit();
 	[NSThread detachNewThreadSelector:@selector(inject) toTarget:self withObject:nil];
+
 }
 
 - (void)unzipFinished:(NSNotification *)a

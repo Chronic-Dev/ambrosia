@@ -8,6 +8,8 @@
 	<string>English</string>
 	<key>CFBundleExecutable</key>
 	<string>ambrosia</string>
+	<key>CFBundleIconFile</key>
+	<string>ambrosia</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.yourcompany.ambrosia</string>
 	<key>CFBundleInfoDictionaryVersion</key>
