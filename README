@@ -5,3 +5,6 @@ Choose IPSW
 
 wait
 #win
+
+
+NOTE: As of right now this is only tested working with the AppleTV 2G, i4 goes into verbose boot and doesn't seem to work, not other A4 devices to test with anymore :(
