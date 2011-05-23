@@ -74,6 +74,11 @@
 	return pf;
 }
 
+- (NSArray *)notInlineKeys
+{
+	return [NSArray arrayWithObjects:@"BatteryCharging0", @"BatteryCharging1", @"BatteryFull", @"BatteryLow0", @"BatteryLow1",@"DeviceTree", nil];
+}
+
 - (NSString *)convertForWiki
 {
 
@@ -90,7 +95,7 @@
 	
 		 [wikiString appendString:[NSString stringWithFormat:@"* '''IV''': %@\n",[[[self keyRepository] valueForKey:@"RestoreRamDisk"] valueForKey:@"iv"]]];
 		 
-		 [wikiString appendString:[NSString stringWithFormat:@"* '''K''': %@\n\n",[[[self keyRepository] valueForKey:@"RestoreRamDisk"] valueForKey:@"k"]]];
+		 [wikiString appendString:[NSString stringWithFormat:@"* '''Key''': %@\n\n",[[[self keyRepository] valueForKey:@"RestoreRamDisk"] valueForKey:@"k"]]];
 		
 		NSEnumerator *theEnum = [[self keyArray] objectEnumerator];
 		
@@ -100,11 +105,18 @@
 		{
 			if (![theObject isEqualToString:@"RestoreRamDisk"])
 			{
-				[wikiString appendString:[NSString stringWithFormat:@"=== %@ ===\n",theObject]];
+				if (![[self notInlineKeys] containsObject:theObject])
+				{
+					[wikiString appendString:[NSString stringWithFormat:@"=== [[%@]] ===\n",theObject]];
+					
+				} else {
+					[wikiString appendString:[NSString stringWithFormat:@"=== %@ ===\n",theObject]];
+				}
+				
 				
 				[wikiString appendString:[NSString stringWithFormat:@"* '''IV''': %@\n",[[[self keyRepository] valueForKey:theObject] valueForKey:@"iv"]]];
 				
-				[wikiString appendString:[NSString stringWithFormat:@"* '''K''': %@\n\n",[[[self keyRepository] valueForKey:theObject] valueForKey:@"k"]]];
+				[wikiString appendString:[NSString stringWithFormat:@"* '''Key''': %@\n\n",[[[self keyRepository] valueForKey:theObject] valueForKey:@"k"]]];
 			}
 			
 		
@@ -213,12 +225,12 @@
 - (NSArray *)keyArray
 {
 	
-	return [NSArray arrayWithObjects:@"AppleLogo", @"BatteryCharging0", @"BatteryCharging1", @"BatteryFull", @"BatteryLow0", @"BatteryLow1", @"BatteryPlugin", @"DeviceTree", @"KernelCache", @"LLB", @"RecoveryMode", @"RestoreRamDisk", @"iBEC", @"iBSS", @"iBoot", nil];
+	return [NSArray arrayWithObjects:@"AppleLogo", @"BatteryCharging0", @"BatteryCharging1", @"BatteryFull", @"BatteryLow0", @"BatteryLow1", @"GlyphPlugin", @"GlyphCharging", @"DeviceTree", @"KernelCache", @"LLB", @"RecoveryMode", @"RestoreRamDisk", @"iBEC", @"iBSS", @"iBoot", nil];
 }
 
 -(NSArray *)manifestArray
 {
-	return [NSArray arrayWithObjects:[self AppleLogo], [self BatteryCharging0], [self BatteryCharging1], [self BatteryFull], [self BatteryLow0], [self BatteryLow1], [self BatteryPlugin], [self DeviceTree], [self KernelCache], [self LLB], [self RecoveryMode], [self RestoreRamDisk], [self iBEC], [self iBSS], [self iBoot], nil];
+	return [NSArray arrayWithObjects:[self AppleLogo], [self BatteryCharging0], [self BatteryCharging1], [self BatteryFull], [self BatteryLow0], [self BatteryLow1], [self BatteryPlugin], [self GlyphCharging], [self DeviceTree], [self KernelCache], [self LLB], [self RecoveryMode], [self RestoreRamDisk], [self iBEC], [self iBSS], [self iBoot], nil];
 }
 
 -(NSArray *)kbagArray
@@ -232,6 +244,9 @@
 		AFirmwareFile *current = [[AFirmwareFile alloc] initWithFile:object];
 		NSString *kbag = [current keyBag];
 		DebugLog(@"kbag: %@", kbag);
+		if (kbag == nil)
+			kbag = @"NO_KBAG";
+			
 		[myKbagArray addObject:kbag];
 		[current release];
 	}
@@ -269,6 +284,17 @@
 {
 	return [[self unzipLocation] stringByAppendingPathComponent:[[[[self manifest] valueForKey:@"BatteryLow1"] valueForKey:@"Info"] valueForKey:@"Path"]];
 }
+
+- (NSString *)GlyphPlugin
+{
+	return [[self unzipLocation] stringByAppendingPathComponent:[[[[self manifest] valueForKey:@"BatteryPlugin"] valueForKey:@"Info"] valueForKey:@"Path"]];
+}
+
+- (NSString *)GlyphCharging
+{
+	return [[self unzipLocation] stringByAppendingPathComponent:[[[[self manifest] valueForKey:@"BatteryCharging"] valueForKey:@"Info"] valueForKey:@"Path"]];
+}
+
 
 - (NSString *)BatteryPlugin
 {

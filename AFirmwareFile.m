@@ -42,9 +42,13 @@
 	NSString *returnString = [ACommon singleLineReturnForProcess:kbagProcess];
 	if (returnString != nil)
 	{
-		DebugLog(@"%@ has keybag: %@", [file lastPathComponent], returnString);
-		keyBag = returnString;
-		return TRUE;
+		if (![returnString isEqualToString:@"NO_KBAG"])
+		{
+			DebugLog(@"%@ has keybag: %@", [file lastPathComponent], returnString);
+			keyBag = returnString;
+			return TRUE;
+		}
+		
 	}
 	
 	DebugLog(@"%@ not encrypted!", file);

@@ -534,7 +534,7 @@
 	NSLog(@"unzip finished!");
 	[ACommon changeStatus:@"Unzip finished!"];
 	
-	
+	NSLog(@"passing dict: %@", theDict);
 	[[NSNotificationCenter defaultCenter] postNotificationName:@"unzipComplete" object:nil userInfo:theDict];
 	[pool release];
 }

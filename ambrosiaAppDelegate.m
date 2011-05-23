@@ -197,7 +197,7 @@
 		return nil;
 	}
 	
-	if (lineCount > 16)
+	if (lineCount > 18)
 	{
 		
 		currentIndex = lineCount - 16;
