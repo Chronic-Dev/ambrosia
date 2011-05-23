@@ -85,6 +85,14 @@
 	if ([self isDecrypted] == TRUE)
 	{
 		NSMutableString *wikiString = [[NSMutableString alloc] init];
+		
+		NSString *rrdiv = [[[self keyRepository] valueForKey:@"RestoreRamDisk"] valueForKey:@"iv"];
+		NSString *rrdk = [[[self keyRepository] valueForKey:@"RestoreRamDisk"] valueForKey:@"k"];
+		BOOL encryptedRD = FALSE;
+		if (([rrdk length] > 0) && ([rrdiv length] > 0))
+			encryptedRD = TRUE;
+	
+		
 		[wikiString appendString:@"== Decryption Keys ==\n"];
 		
 		[wikiString appendString:[NSString stringWithFormat:@"=== Root Filesystem (%@) ===\n",[[self OS] lastPathComponent]]];
@@ -92,10 +100,18 @@
 		[wikiString appendString:[NSString stringWithFormat:@"*'''[[VFDecrypt]] Key''': %@\n\n",[self vfDecryptKey]]];
 		
 		[wikiString appendString:[NSString stringWithFormat:@"=== [[Restore Ramdisk]] (%@) ===\n",[[self RestoreRamDisk] lastPathComponent]]];
+		
+		if (encryptedRD)
+		{
+			[wikiString appendString:[NSString stringWithFormat:@"* '''IV''': %@\n",rrdiv]];
+			
+			[wikiString appendString:[NSString stringWithFormat:@"* '''Key''': %@\n\n",rrdk]];
+		} else {
+			
+			[wikiString appendString:@"\tNot Encrypted\n\n"];
+		}
 	
-		 [wikiString appendString:[NSString stringWithFormat:@"* '''IV''': %@\n",[[[self keyRepository] valueForKey:@"RestoreRamDisk"] valueForKey:@"iv"]]];
 		 
-		 [wikiString appendString:[NSString stringWithFormat:@"* '''Key''': %@\n\n",[[[self keyRepository] valueForKey:@"RestoreRamDisk"] valueForKey:@"k"]]];
 		
 		NSEnumerator *theEnum = [[self keyArray] objectEnumerator];
 		

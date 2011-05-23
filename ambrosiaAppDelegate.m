@@ -200,7 +200,7 @@
 	if (lineCount > 18)
 	{
 		
-		currentIndex = lineCount - 16;
+		currentIndex = lineCount - 17;
 		DebugLog(@"initial run!! currentIndex: %i",currentIndex);
 		
 	}
@@ -237,7 +237,10 @@
 			if ([k length] > 0)
 			{
 				[keys setObject:currentDict forKey:currentKey];
-			}
+			} //else {
+//				
+//				[keys setObject:[NSNull	null] forKey:currentKey];
+//			}
 			
 			
 		} else {
