@@ -92,6 +92,8 @@
 
 - (IBAction)testRun:(id)sender
 {
+		//[self sendCommand:self];
+		//return;
 	[sender setEnabled:FALSE];
 	NSOpenPanel *op = [NSOpenPanel openPanel];
 	[op runModalForTypes:[NSArray arrayWithObject:@"ipsw"]];
@@ -157,7 +159,7 @@
 		return nil;
 		
 	}
-	
+		//irecv_set_debug_level(20);
 	irecv_set_configuration(client, 1);
 	
 	irecv_set_interface(client, 0, 0);
@@ -187,6 +189,7 @@
 	DebugLog(@"line count: %i", [rawkeyArray count]);
 	
 	int currentIndex = 0;
+	int properIndex = 0;
 	
 	int lineCount = [rawkeyArray count];
 	
@@ -212,7 +215,7 @@
 	
 	NSEnumerator *theEnum = [keyArray objectEnumerator];
 	id currentKey = nil;
-
+	NSMutableArray *stragglers = [[NSMutableArray alloc] init];
 	while (currentKey = [theEnum nextObject])
 	{
 		NSString *keyLine = [rawkeyArray objectAtIndex:currentIndex];
@@ -237,7 +240,14 @@
 			if ([k length] > 0)
 			{
 				[keys setObject:currentDict forKey:currentKey];
-			} //else {
+			} 
+			
+			if ([k length] != 64)
+			{
+				[stragglers addObject:[NSDictionary dictionaryWithObjectsAndKeys:currentKey, @"key", [NSString stringWithFormat:@"%i", properIndex], @"index", [kbagArray objectAtIndex:properIndex], @"kbag", nil]];
+				
+			}
+				//else {
 //				
 //				[keys setObject:[NSNull	null] forKey:currentKey];
 //			}
@@ -247,10 +257,33 @@
 			DebugLog(@"item not encrypted?: %@", currentKey);
 		}
 		currentIndex++;
+		properIndex++;
 		
 	}
 	
+		DebugLog(@"Stragglers: %@", stragglers);
 	
+	NSEnumerator *stragglerEnum = [stragglers objectEnumerator];
+	id straggler = nil;
+	while (straggler = [stragglerEnum nextObject]) {
+	
+		DebugLog(@"handling straggler: %@", straggler);
+		NSString *currentKey = [straggler valueForKey:@"key"];
+		NSString *kbag = [straggler valueForKey:@"kbag"];
+		NSDictionary *keyDict = [ACommon decryptedKbag:kbag];
+		DebugLog(@"new keydict: %@", keyDict);
+		if (keyDict != nil)
+		{
+			[keys removeObjectForKey:currentKey];
+			[keys setObject:keyDict forKey:currentKey];
+			
+		}
+		
+		
+	}
+	
+	[stragglers release];
+	stragglers = nil;
 	return [keys autorelease];
 	
 
@@ -258,6 +291,7 @@
 
 - (NSArray *)kbagArray
 {
+	return [NSArray arrayWithObject:@"D6A180E9305953FCBC7A470B02170EB4C738A58FA29B54C9F1FA20DDDAC7BAF68D5CB5DAD6828D681323DBEFD309F237"];
 	return nil; //deprecated, this was here from when i was testing how to interact with the iRecovery shell
 }
 
@@ -304,7 +338,7 @@
 	
 	NSString *output = [NSString stringWithContentsOfFile:logPath encoding:NSASCIIStringEncoding error:nil];
 	output = [output stringByReplacingOccurrencesOfString:@"\0" withString:@""];
-		//NSLog(@"output: %@", output);
+		NSLog(@"output: %@", output);
 	
 	
 }
@@ -428,23 +462,23 @@ void print_progress(double progress, void* data) {
 
 - (IBAction)poison:(id)sender
 {
-	irecv_error_t error = 0;
-	irecv_init();
-	irecv_client_t client = NULL;
-	if (irecv_open(&client) != IRECV_E_SUCCESS)
-	{
-		NSLog(@"fail!");
-		return;
-		
-	}
-	
-	error = irecv_send_command(client, "setenv boot-args 2");
-	debug("%s\n", irecv_strerror(error));
-	
-	error = irecv_send_command(client, "saveenv");
-	debug("%s\n", irecv_strerror(error));
-	irecv_close(client);
-	irecv_exit();
+//	irecv_error_t error = 0;
+//	irecv_init();
+//	irecv_client_t client = NULL;
+//	if (irecv_open(&client) != IRECV_E_SUCCESS)
+//	{
+//		NSLog(@"fail!");
+//		return;
+//		
+//	}
+//	
+//	error = irecv_send_command(client, "setenv boot-args 2");
+//	debug("%s\n", irecv_strerror(error));
+//	
+//	error = irecv_send_command(client, "saveenv");
+//	debug("%s\n", irecv_strerror(error));
+//	irecv_close(client);
+//	irecv_exit();
 	[NSThread detachNewThreadSelector:@selector(inject) toTarget:self withObject:nil];
 
 }
@@ -491,6 +525,7 @@ void print_progress(double progress, void* data) {
 			
 			if (mountVolume != nil)
 			{
+				[keysDict setValue:kbagArray forKey:@"kbagArray"];
 				[keysDict setValue:mountVolume forKey:@"mountVolume"];
 				NSArray *staticCacheList = [ACommon dyldcacheContentsFromVolume:mountVolume];
 				NSMutableArray *cacheList = [[NSMutableArray alloc] initWithArray:staticCacheList];
@@ -555,6 +590,10 @@ void print_progress(double progress, void* data) {
 	[self setDownloadText:@"Decryping LLB..."];
 	
 	[ACommon decryptRamdisk:[currentFirmware LLB] toPath:[[currentFirmware LLB] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"LLB"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"LLB"] valueForKey:@"k"]];
+	
+	[self setDownloadText:@"Decryping iBEC..."];
+	
+	[ACommon decryptRamdisk:[currentFirmware iBEC] toPath:[[currentFirmware iBEC] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"iBEC"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"iBEC"] valueForKey:@"k"]];
 	
 	
 	[self setDownloadText:@"Finished!!"];

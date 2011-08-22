@@ -241,16 +241,44 @@
 - (NSArray *)keyArray
 {
 	
-	return [NSArray arrayWithObjects:@"AppleLogo", @"BatteryCharging0", @"BatteryCharging1", @"BatteryFull", @"BatteryLow0", @"BatteryLow1", @"GlyphPlugin", @"GlyphCharging", @"DeviceTree", @"KernelCache", @"LLB", @"RecoveryMode", @"RestoreRamDisk", @"iBEC", @"iBSS", @"iBoot", nil];
+	return [NSArray arrayWithObjects:@"AppleLogo", @"BatteryCharging0", @"BatteryCharging1", @"BatteryFull", @"BatteryLow0", @"BatteryLow1", @"GlyphPlugin", @"GlyphCharging", @"KernelCache", @"DeviceTree", @"LLB", @"RecoveryMode", @"RestoreRamDisk", @"iBEC", @"iBSS", @"iBoot", nil];
 }
+
+/*
+ 
+ -iv 5a7cb0980b4cf56d9699d7ef756c4f9c -k ca3665583d6e30c0e4d9ddc3f0808aa33a9515922435cc6669868d66e78ba635 AppleLogo
+-iv 20744e995ce6ca7f93df896bb72198bd -k ea08ba056f0b4a8726becd6d8550fd59b6e047055e1535e4fcac7d07fa7b4cb5  BatteryCharging0
+-iv f9504808a1f6673b51ecc05e0535d6fe -k 410e530fba7f0555247a5f6e14904251b95306439b7b4a3e0721f403aa1d3aad  BatteryCharging1
+-iv 822ca5ae33c83d5048fd4b1f3d063f6 -k bd8fc5816dee922606b6ac6465f88cc7534b9a4450f8baa15f3fc9cff42d849c   BatteryFull
+-iv d77c640914de89faa60522907109bdef -k 93d7c555c79390a46949e28f286daa8e72149ffe60282570b9305f7affc42e95  BatteryLow0
+-iv 5cf61c60b5d9ff940a6089053363278a -k 4dc63f8ed03cf5adc93af7d02cf88aa606b6ccf47c98620cbab2c103136da470  BatteryLow1
+-iv 83edb6499e782720c590ab938e0913a9 -k a9047a2f1760164366e4c5c036158317d6b555ad09227e0a44baad84623f951   BatteryPlugin
+-iv 404af73f2eba410b00cdd2f4644cc3e8 -k 5ec0dcc45b200989cb35c8159cd62d0c41bf3bbdc6a9b35820d24079d5783cba  GlpyhCharging
+-iv e442f41e28c951e30b89b15d8a701909 -k e37b592286ea527b88f10ff29df52cbefd12b99a89ec92ec6a2fbe1a1e5af0ff  DeviceTree
+-iv 64970e424ea6cece20dca812d0cdaf07 -k c6f159b441e660e5f192ae54d9084b1176145707bb3474e03f83ad9a28188e4   KernelCache
+-iv 1ea341d5d29460148ddbe9e7241c80aa -k be839ab0d009324febf45545d48907906b83af0b6d75a1843794e71ab82f93e2  LLB
+-iv b21896777e7511de9f6ed7622e3b44fe -k edd55099d0deb9d3b5bc8229d1b3d5f597e92eb28b28e9126e01c268c23e0531  RecoveryMode
+-iv 7bf76ec1fdf382d70ea9581e223943f6 -k f91256406327befe3c5c495abcef342fad14a28227a120e04139e1220814a31a  RestoreRamDisk
+-iv 08d25f37324660147ff4dd9544d6fa4c -k df6265c5606d22c9ba870df89447a797cecb25ff101c38befb3c0f9f9ef63970  iBEC
+-iv 17742baec33113889e5cbfcaa12fb4f0 -k 998bd521b5b54641fbeb3f73d9959bae126db0bc7e90b7ede7440d3951016010  iBSS
+-iv 115ed2213d19975088ac0c49d3b58d44 -k f5dae9051e20b2889f1673e4ffbd269b862136e559432ae8a2580e0d47de3766  iBoot
+
+*/
 
 -(NSArray *)manifestArray
 {
-	return [NSArray arrayWithObjects:[self AppleLogo], [self BatteryCharging0], [self BatteryCharging1], [self BatteryFull], [self BatteryLow0], [self BatteryLow1], [self BatteryPlugin], [self GlyphCharging], [self DeviceTree], [self KernelCache], [self LLB], [self RecoveryMode], [self RestoreRamDisk], [self iBEC], [self iBSS], [self iBoot], nil];
+	return [NSArray arrayWithObjects:[self AppleLogo], [self BatteryCharging0], [self BatteryCharging1], [self BatteryFull], [self BatteryLow0], [self BatteryLow1], [self BatteryPlugin], [self GlyphCharging], [self KernelCache], [self DeviceTree],  [self LLB], [self RecoveryMode], [self RestoreRamDisk], [self iBEC], [self iBSS], [self iBoot], nil];
 }
 
 -(NSArray *)kbagArray
 {
+	if ([self isDecrypted] == TRUE)
+	{
+			///	NSLog(@"isDecrypted!!");
+		NSDictionary *keyRepository = [self keyRepository];
+			//NSLog(@"keyRepository: %@", keyRepository);
+		return [keyRepository valueForKey:@"kbagArray"];
+	}
 		//NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	NSMutableArray *myKbagArray = [[NSMutableArray alloc] init];
 	NSEnumerator *manifestEnum = [[self manifestArray] objectEnumerator];
