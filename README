@@ -1,4 +1,4 @@
-if you don't know, now you know!!!!?
+if you don't know, now you know!!!!? (IPSW + firmware decryption)
 
 Inject Pois0n with requisite device (match platforms) (get in DFU dummy!)
 Choose IPSW
@@ -7,4 +7,4 @@ wait
 #win
 
 
-NOTE: As of right now this is only tested working with the AppleTV 2G, i4 goes into verbose boot and doesn't seem to work, not other A4 devices to test with anymore :(
+NOTE: works with other devices now!!!
