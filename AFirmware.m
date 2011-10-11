@@ -14,7 +14,14 @@
 
 @synthesize fwName, unzipLocation, filePath, vfDecryptKey, buildIdentity, mountVolume;
 
-
+- (NSString *)patchNameFromFile:(NSString *)original
+{
+	NSString *newNameBase  = [[[original componentsSeparatedByString:@"/"] lastObject] stringByDeletingPathExtension];
+	NSMutableString *patchFile = [[NSMutableString alloc] initWithString:newNameBase];
+	[patchFile replaceOccurrencesOfString:@"_abdec" withString:@"" options:NSLiteralSearch range:NSMakeRange(0, [patchFile length])];
+	[patchFile appendString:@".patch"];
+	return [patchFile autorelease];
+}
 
 - (NSDictionary *)firmwarePatches
 {
@@ -40,21 +47,27 @@
 	
 	NSString *rrdiv = [[self ramdiskKey] valueForKey:@"iv"];
 	NSString *rrdK = [[self ramdiskKey] valueForKey:@"k"];
+	NSString *rrdPath = [[self RestoreRamDisk] lastPathComponent];
 	
 	NSString *ibssK = [[[self keyRepository] valueForKey:@"iBSS"] valueForKey:@"k"];
 	NSString *ibssiv = [[[self keyRepository] valueForKey:@"iBSS"] valueForKey:@"iv"];
+	NSString *ibssPath = [[[[self manifest] valueForKey:@"iBSS"] valueForKey:@"Info"] valueForKey:@"Path"];
+	NSString *ibssPatch = [self patchNameFromFile:ibssPath];
 	
 	NSString *ibecK = [[[self keyRepository] valueForKey:@"iBEC"] valueForKey:@"k"];
 	NSString *ibeciv = [[[self keyRepository] valueForKey:@"iBEC"] valueForKey:@"iv"];
+	NSString *ibecPath = [[[[self manifest] valueForKey:@"iBEC"] valueForKey:@"Info"] valueForKey:@"Path"];
+	NSString *ibecPatch = [self patchNameFromFile:ibecPath];
 	
 	NSString *kcacheK = [[[self keyRepository] valueForKey:@"KernelCache"] valueForKey:@"k"];
 	NSString *kcacheiv = [[[self keyRepository] valueForKey:@"KernelCache"] valueForKey:@"iv"]; 
 	NSString *kcachePath = [[[[self manifest] valueForKey:@"KernelCache"] valueForKey:@"Info"] valueForKey:@"Path"];
+	NSString *kcachePatch = [self patchNameFromFile:kcachePath];
 	
-	NSDictionary *restoreRamDisk = [NSDictionary dictionaryWithObjectsAndKeys:[[self RestoreRamDisk] lastPathComponent], @"File", rrdiv, @"IV", rrdK, @"Key", @"8", @"TypeFlag",nil];
-	NSDictionary *ibssDict = [NSDictionary dictionaryWithObjectsAndKeys:[[[[self manifest] valueForKey:@"iBSS"] valueForKey:@"Info"] valueForKey:@"Path"], @"File", ibssiv, @"IV", ibssK, @"Key", @"8", @"TypeFlag",nil];
-	NSDictionary *ibecDict = [NSDictionary dictionaryWithObjectsAndKeys:[[[[self manifest] valueForKey:@"iBEC"] valueForKey:@"Info"] valueForKey:@"Path"], @"File", ibeciv, @"IV", ibecK, @"Key", @"8", @"TypeFlag",nil];
-	NSDictionary *kcacheDict = [NSDictionary dictionaryWithObjectsAndKeys:kcachePath, @"File", kcacheiv, @"IV", kcacheK, @"Key", @"8", @"TypeFlag",nil];
+	NSDictionary *restoreRamDisk = [NSDictionary dictionaryWithObjectsAndKeys:rrdPath, @"File", rrdiv, @"IV", rrdK, @"Key", @"8", @"TypeFlag",nil];
+	NSDictionary *ibssDict = [NSDictionary dictionaryWithObjectsAndKeys:ibssPath, @"File", ibssiv, @"IV", ibssK, @"Key", @"8", @"TypeFlag", ibssPatch, @"Patch", nil];
+	NSDictionary *ibecDict = [NSDictionary dictionaryWithObjectsAndKeys:ibecPath, @"File", ibeciv, @"IV", ibecK, @"Key", @"8", @"TypeFlag", ibecPatch, @"Patch",nil];
+	NSDictionary *kcacheDict = [NSDictionary dictionaryWithObjectsAndKeys:kcachePath, @"File", kcacheiv, @"IV", kcacheK, @"Key", @"8", @"TypeFlag", kcachePatch, @"Patch",nil];
 	return [NSDictionary dictionaryWithObjectsAndKeys:restoreRamDisk, @"Restore Ramdisk", ibssDict, @"iBSS", ibecDict, @"iBEC",kcacheDict, @"kernelcache", nil];
 	
 }//FIXME: missing patch path!!!!!
@@ -245,7 +258,8 @@
 	NSString *pf = [[self unzipLocation] stringByAppendingPathComponent:@"PrivateFrameworks"];
 	if(![FM fileExistsAtPath:pf])
 	{
-		[FM createDirectoryAtPath:pf attributes:nil];
+			//[FM createDirectoryAtPath:pf attributes:nil];
+		[FM createDirectoryAtPath:pf withIntermediateDirectories:TRUE attributes:nil error:nil];
 	}
 	
 	return pf;
@@ -256,7 +270,7 @@
 	NSString *pf = [[self unzipLocation] stringByAppendingPathComponent:@"Frameworks"];
 	if(![FM fileExistsAtPath:pf])
 	{
-		[FM createDirectoryAtPath:pf attributes:nil];
+		[FM createDirectoryAtPath:pf withIntermediateDirectories:TRUE attributes:nil error:nil];
 	}
 	
 	return pf;

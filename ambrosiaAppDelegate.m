@@ -8,14 +8,6 @@
 
 #import "ambrosiaAppDelegate.h"
 
-@interface NSString (specialAdditions)
-
-
--(NSString *)cleanedString;
--(NSString *)decryptedPath;
-
-
-@end
 
 @implementation NSString (specialAdditions) //this is why we need MSHookIvar to
 

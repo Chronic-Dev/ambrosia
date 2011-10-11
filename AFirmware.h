@@ -37,7 +37,7 @@
 - (NSString *)ProductBuildVersion;
 - (NSString *)ProductType;
 - (NSString *)ProductVersion;
-
+- (NSString *)GlyphCharging;
 - (NSString *)AppleLogo;
 - (NSString *)BatteryCharging0;
 - (NSString *)BatteryCharging1;
@@ -80,8 +80,7 @@
 - (NSString *)wikiPath;
 - (NSString *)privateFrameworksPath;
 - (NSString *)frameworksPath;
-
-
+- (NSString *)convertForBundle;
 @end
 
 /*

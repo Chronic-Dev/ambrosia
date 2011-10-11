@@ -13,3 +13,11 @@
 #define NULLOUT [NSFileHandle fileHandleWithNullDevice]
 
 
+@interface NSString (specialAdditions)
+
+
+-(NSString *)cleanedString;
+-(NSString *)decryptedPath;
+
+
+@end

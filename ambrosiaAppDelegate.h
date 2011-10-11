@@ -45,4 +45,6 @@
 - (int)inject;
 - (IBAction)poison:(id)sender;
 - (IBAction)sendCommand:(id)sender;
+- (void)processPFHeaders:(NSArray *)cacheArray fromCache:(NSString *)dyldcacheFile;
+- (void)processFHeaders:(NSArray *)cacheArray fromCache:(NSString *)dyldcacheFile;
 @end

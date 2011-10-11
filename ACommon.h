@@ -22,6 +22,8 @@
 + (void)changeStatus:(NSString *)theStatus;
 + (NSArray *)returnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments;
 + (NSString *)SHA1FromFile:(NSString *)inputFile;
++ (NSArray *)dyldcacheContentsFromVolume:(NSString *)theVolume;
++ (NSString *)dyldcacheFileFromVolume:(NSString *)theVolume;
 @end
 
 
