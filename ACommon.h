@@ -21,6 +21,7 @@
 + (NSDictionary *)decryptFilesystemFromFirmware:(id)currentFirmware;
 + (void)changeStatus:(NSString *)theStatus;
 + (NSArray *)returnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments;
++ (NSString *)SHA1FromFile:(NSString *)inputFile;
 @end
 
 

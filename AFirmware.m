@@ -7,11 +7,190 @@
 //
 
 #import "AFirmware.h"
+#import "patchClass.h"
 
 
 @implementation AFirmware
 
 @synthesize fwName, unzipLocation, filePath, vfDecryptKey, buildIdentity, mountVolume;
+
+
+
+- (NSDictionary *)firmwarePatches
+{
+	/*
+	 
+	 FirmwarePatches =     {
+	 "Restore Ramdisk" =         {
+	 File = "038-1328-062.dmg";
+	 IV = 7bf76ec1fdf382d70ea9581e223943f6;
+	 Key = f91256406327befe3c5c495abcef342fad14a28227a120e04139e1220814a31a;
+	 TypeFlag = 8;
+	 };
+	 iBSS =         {
+	 File = "Firmware/dfu/iBSS.k66ap.RELEASE.dfu";
+	 IV = 17742baec33113889e5cbfcaa12fb4f0;
+	 Key = 998bd521b5b54641fbeb3f73d9959bae126db0bc7e90b7ede7440d3951016010;
+	 Patch = "iBSS.k66ap.RELEASE.patch";
+	 TypeFlag = 8;
+	 };
+	 };
+	 
+	 */
+	
+	NSString *rrdiv = [[self ramdiskKey] valueForKey:@"iv"];
+	NSString *rrdK = [[self ramdiskKey] valueForKey:@"k"];
+	
+	NSString *ibssK = [[[self keyRepository] valueForKey:@"iBSS"] valueForKey:@"k"];
+	NSString *ibssiv = [[[self keyRepository] valueForKey:@"iBSS"] valueForKey:@"iv"];
+	
+	NSString *ibecK = [[[self keyRepository] valueForKey:@"iBEC"] valueForKey:@"k"];
+	NSString *ibeciv = [[[self keyRepository] valueForKey:@"iBEC"] valueForKey:@"iv"];
+	
+	NSDictionary *restoreRamDisk = [NSDictionary dictionaryWithObjectsAndKeys:[[self RestoreRamDisk] lastPathComponent], @"File", rrdiv, @"IV", rrdK, @"Key", @"8", @"TypeFlag",nil];
+	NSDictionary *ibssDict = [NSDictionary dictionaryWithObjectsAndKeys:[[[[self manifest] valueForKey:@"iBSS"] valueForKey:@"Info"] valueForKey:@"Path"], @"File", ibssiv, @"IV", ibssK, @"Key", @"8", @"TypeFlag",nil];
+	NSDictionary *ibecDict = [NSDictionary dictionaryWithObjectsAndKeys:[[[[self manifest] valueForKey:@"iBEC"] valueForKey:@"Info"] valueForKey:@"Path"], @"File", ibeciv, @"IV", ibecK, @"Key", @"8", @"TypeFlag",nil];
+	
+	return [NSDictionary dictionaryWithObjectsAndKeys:restoreRamDisk, @"Restore Ramdisk", ibssDict, @"iBSS", ibecDict, @"iBEC", nil];
+	
+}
+
+- (NSString *)extractASR
+{
+	NSString *ramdiskPath = [[self RestoreRamDisk] stringByDeletingPathExtension];
+	ramdiskPath = [ramdiskPath stringByAppendingString:@"_patched.dmg"];
+	NSString *mountedPath = [ACommon mountImage:ramdiskPath];
+	if(mountedPath != nil)
+	{
+		NSString *asrPath = [mountedPath stringByAppendingPathComponent:@"usr/sbin/asr"];
+		NSString *outputAsr = [[self unzipLocation] stringByAppendingPathComponent:@"asr"];
+		[[NSFileManager defaultManager] copyItemAtPath:asrPath toPath:outputAsr error:nil];
+		return outputAsr;
+	}
+	return nil;
+}
+
+- (NSDictionary *)defaultFilesystemPatches
+{
+	/*
+	 FilesystemPatches =     {
+	 "Filesystem Jailbreak" =         (
+	 {
+	 Action = Patch;
+	 File = "etc/fstab";
+	 Name = "Filesystem Write Access";
+	 Patch = "fstab.patch";
+	 },
+	 {
+	 Action = Patch;
+	 File = "Applications/AppleTV.app/AppleTV";
+	 Name = Seatbelt;
+	 Patch = "AppleTV.patch";
+	 }
+	 );
+	 );
+	 
+	 
+	 */
+	NSArray *patchArray = [NSArray arrayWithObject:[NSDictionary 
+													dictionaryWithObjectsAndKeys:@"Patch", @"Action", @"etc/fstab", 
+													@"File", @"Filesystem Write Access", @"Name", @"fstab.patch", @"Patch", nil]];
+
+	return [NSDictionary dictionaryWithObject:patchArray forKey:@"Filesystem Jailbreak"];
+}
+
+- (NSString *)trimmedName
+{
+	NSMutableString *theString = [[NSMutableString alloc] initWithString:[self fwName]];
+	[theString replaceOccurrencesOfString:@"_Restore" withString:@"" options:NSLiteralSearch range:NSMakeRange(0, [theString length])];
+	return [theString autorelease];
+}
+
+- (NSDictionary *)ramdiskPatches
+{
+	
+	return [NSDictionary dictionaryWithObject:[NSDictionary 
+											   dictionaryWithObjectsAndKeys:@"usr/sbin/asr", @"File", @"asr.patch", 
+											   @"Patch", nil] forKey:@"asr"];
+}
+
+- (NSString *)convertForBundle
+{
+	NSFileManager *man = [NSFileManager defaultManager];
+	NSMutableDictionary *bundleInfo = [[NSMutableDictionary alloc] init];
+	[bundleInfo setObject:[NSNumber numberWithBool:FALSE] forKey:@"DeleteBuildManifest"];
+	[bundleInfo setObject:@"" forKey:@"DownloadUrl"];
+	[bundleInfo setObject:[self fwName] forKey:@"Filename"];
+	[bundleInfo setObject:[self defaultFilesystemPatches] forKey:@"FilesystemPatches"];
+	[bundleInfo setObject:[self firmwarePatches] forKey:@"FirmwarePatches"];
+	[bundleInfo setObject:[self trimmedName] forKey:@"Name"];
+	[bundleInfo setObject:[[self OS] lastPathComponent] forKey:@"RootFilesystem"];
+	[bundleInfo setObject:@"ramdisk" forKey:@"RestoreRamdiskMountVolume"];
+	[bundleInfo setObject:[self.mountVolume lastPathComponent] forKey:@"RootFilesystemMountVolume"];
+	[bundleInfo setObject:[self vfDecryptKey] forKey:@"RootFilesystemKey"];
+	[bundleInfo setObject:@"1024" forKey:@"RootFilesystemSize"];
+	[bundleInfo setObject:[NSArray arrayWithObject:@"org.saurik.cydia"] forKey:@"PreInstalledPackages"];
+	[bundleInfo setObject:[ACommon SHA1FromFile:self.filePath] forKey:@"SHA1"];
+	[bundleInfo setObject:[self ramdiskPatches] forKey:@"RamdiskPatches"];
+	
+	NSString *bundleFolder = [[[self unzipLocation] stringByAppendingPathComponent:[self trimmedName]] stringByAppendingPathExtension:@"bundle"];
+	NSString *infoPath = [bundleFolder stringByAppendingPathComponent:@"Info.plist"];
+	[man createDirectoryAtPath:bundleFolder withIntermediateDirectories:TRUE attributes:nil error:nil];
+	
+	[bundleInfo writeToFile:infoPath atomically:TRUE];
+	
+	[bundleInfo release];
+	bundleInfo = nil;
+
+	NSLog(@"extracting asr...");
+	
+	[ACommon changeStatus:@"Extracting asr..."];
+
+	NSString *asrPath = [self extractASR];
+	
+	NSLog(@"creating patches....");
+	
+	[ACommon changeStatus:@"Creating patches...."];
+	
+	NSString *deciBSS = [[self iBSS] decryptedPath];
+	NSString *decCache = [[self KernelCache] decryptedPath];
+	NSString *deciBEC = [[self iBEC] decryptedPath];
+	
+	NSString *ibecPatch = [patchClass patchDFUFile:deciBEC];
+	NSString *ibssPatch = [patchClass patchDFUFile:deciBSS];
+	NSString *kernelPatch = [patchClass patchKernelFile:decCache];
+	
+	if (asrPath != nil)
+	{
+		NSString *asrPatch = [patchClass patchASRFile:asrPath];
+		NSString *bundleAsr = [bundleFolder stringByAppendingPathComponent:[asrPatch lastPathComponent]];
+		[man moveItemAtPath:asrPatch toPath:bundleAsr error:nil];
+	}
+	
+	
+	NSString *bundleiBEC = [bundleFolder stringByAppendingPathComponent:[ibecPatch lastPathComponent]];
+	NSString *bundleiBSS = [bundleFolder stringByAppendingPathComponent:[ibssPatch lastPathComponent]];
+	NSString *bundleKernel = [bundleFolder stringByAppendingPathComponent:[kernelPatch lastPathComponent]];
+	
+	[man moveItemAtPath:ibecPatch toPath:bundleiBEC error:nil];
+	[man moveItemAtPath:ibssPatch toPath:bundleiBSS error:nil];
+	[man moveItemAtPath:kernelPatch toPath:bundleKernel error:nil];
+	
+	
+	
+	
+	
+	
+	
+	return infoPath;
+		//FIXME: need Platform and SubPlatform
+	
+	
+}
+
+
+
+
 
 - (id)initWithFile:(NSString *)theFile
 {

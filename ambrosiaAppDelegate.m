@@ -527,6 +527,7 @@ void print_progress(double progress, void* data) {
 			{
 				[keysDict setValue:kbagArray forKey:@"kbagArray"];
 				[keysDict setValue:mountVolume forKey:@"mountVolume"];
+				[currentFirmware setMountVolume:mountVolume];
 				NSArray *staticCacheList = [ACommon dyldcacheContentsFromVolume:mountVolume];
 				NSMutableArray *cacheList = [[NSMutableArray alloc] initWithArray:staticCacheList];
 				[keysDict setValue:staticCacheList forKey:@"dyldcache"];
@@ -564,37 +565,46 @@ void print_progress(double progress, void* data) {
 			[convertForWiki writeToFile:wikiPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 			[[NSWorkspace sharedWorkspace] openFile:wikiPath];
 			
+			
+			
 		}
 		
+		
+		
+		/*
+		 
+		 ohhh yeh this needs some work, BUT it /SHOULD/ work!
+		 
+		 */
+		
+		[self setDownloadText:@"Decryping iBSS..."];
+		
+		[ACommon decryptRamdisk:[currentFirmware iBSS] toPath:[[currentFirmware iBSS] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"iBSS"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"iBSS"] valueForKey:@"k"]];
+		
+		[self setDownloadText:@"Decryping iBoot..."];
+		
+		[ACommon decryptRamdisk:[currentFirmware iBoot] toPath:[[currentFirmware iBoot] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"iBoot"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"iBoot"] valueForKey:@"k"]];
+		
+		[self setDownloadText:@"Decryping KernelCache..."];
+		
+		
+		[ACommon decryptRamdisk:[currentFirmware KernelCache] toPath:[[currentFirmware KernelCache] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"KernelCache"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"KernelCache"] valueForKey:@"k"]];
+		
+		[self setDownloadText:@"Decryping LLB..."];
+		
+		[ACommon decryptRamdisk:[currentFirmware LLB] toPath:[[currentFirmware LLB] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"LLB"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"LLB"] valueForKey:@"k"]];
+		
+		[self setDownloadText:@"Decryping iBEC..."];
+		
+		[ACommon decryptRamdisk:[currentFirmware iBEC] toPath:[[currentFirmware iBEC] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"iBEC"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"iBEC"] valueForKey:@"k"]];
+		
+		[self setDownloadText:@"Creating PT/SP Bundle..."];
+		
+		NSString *infoBundle = [currentFirmware convertForBundle];
+		[[NSWorkspace sharedWorkspace] openFile:infoBundle];
+		
+		
 	}
-	
-	/*
-	 
-	 ohhh yeh this needs some work, BUT it /SHOULD/ work!
-	 
-	 */
-	
-	[self setDownloadText:@"Decryping iBSS..."];
-	
-	[ACommon decryptRamdisk:[currentFirmware iBSS] toPath:[[currentFirmware iBSS] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"iBSS"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"iBSS"] valueForKey:@"k"]];
-	
-	[self setDownloadText:@"Decryping iBoot..."];
-	
-	[ACommon decryptRamdisk:[currentFirmware iBoot] toPath:[[currentFirmware iBoot] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"iBoot"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"iBoot"] valueForKey:@"k"]];
-	
-	[self setDownloadText:@"Decryping KernelCache..."];
-	
-	
-	[ACommon decryptRamdisk:[currentFirmware KernelCache] toPath:[[currentFirmware KernelCache] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"KernelCache"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"KernelCache"] valueForKey:@"k"]];
-
-	[self setDownloadText:@"Decryping LLB..."];
-	
-	[ACommon decryptRamdisk:[currentFirmware LLB] toPath:[[currentFirmware LLB] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"LLB"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"LLB"] valueForKey:@"k"]];
-	
-	[self setDownloadText:@"Decryping iBEC..."];
-	
-	[ACommon decryptRamdisk:[currentFirmware iBEC] toPath:[[currentFirmware iBEC] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"iBEC"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"iBEC"] valueForKey:@"k"]];
-	
 	
 	[self setDownloadText:@"Finished!!"];
 	

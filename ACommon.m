@@ -391,6 +391,37 @@
 	
 }
 
++ (NSString *)SHA1FromFile:(NSString *)inputFile
+{
+	
+	
+	NSTask *sslTask = [[NSTask alloc] init];
+	NSPipe *sspipe = [[NSPipe alloc] init];
+	NSFileHandle *ssh = [sspipe fileHandleForReading];
+	
+	[sslTask setLaunchPath:@"/usr/bin/openssl"];
+	
+	[sslTask setArguments:[NSArray arrayWithObjects:@"sha1", inputFile, nil]];
+	[sslTask setStandardOutput:sspipe];
+	[sslTask setStandardError:sspipe];
+	[sslTask launch];
+	[sslTask waitUntilExit];
+	NSData *outData = [ssh readDataToEndOfFile];
+	NSString *outputString = [[[NSString alloc] initWithData:outData 
+													encoding:NSASCIIStringEncoding] 
+							  stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	
+	NSString *outputSHA = [[[outputString componentsSeparatedByString:@"="] lastObject] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	
+	[sslTask release];
+	sslTask = nil;
+	[sspipe release];
+	sspipe = nil;
+	return outputSHA;
+	
+	
+}
+
 +(NSArray *)returnForProcess:(NSString *)call
 {
     if (call==nil) 
