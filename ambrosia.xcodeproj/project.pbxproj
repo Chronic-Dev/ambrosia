@@ -19,6 +19,7 @@
 		3270617C135BBF2600EE420C /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3270617B135BBF2600EE420C /* IOKit.framework */; };
 		32CFE76D136A429F00BFCAEB /* ambrosia.icns in Resources */ = {isa = PBXBuildFile; fileRef = 32CFE76C136A429F00BFCAEB /* ambrosia.icns */; };
 		899548A214443F6400EAD01A /* patchClass.m in Sources */ = {isa = PBXBuildFile; fileRef = 899548A114443F6400EAD01A /* patchClass.m */; };
+		8995491F144451E600EAD01A /* fstab.patch in Resources */ = {isa = PBXBuildFile; fileRef = 8995491E144451E600EAD01A /* fstab.patch */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
@@ -50,6 +51,7 @@
 		32CFE76C136A429F00BFCAEB /* ambrosia.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = ambrosia.icns; sourceTree = "<group>"; };
 		899548A014443F6400EAD01A /* patchClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = patchClass.h; sourceTree = "<group>"; };
 		899548A114443F6400EAD01A /* patchClass.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = patchClass.m; sourceTree = "<group>"; };
+		8995491E144451E600EAD01A /* fstab.patch */ = {isa = PBXFileReference; lastKnownFileType = file; path = fstab.patch; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* ambrosia-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "ambrosia-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* ambrosia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ambrosia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -137,6 +139,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				8995491E144451E600EAD01A /* fstab.patch */,
 				32CFE76C136A429F00BFCAEB /* ambrosia.icns */,
 				321D9FC613579D4C0063757E /* bin */,
 				8D1107310486CEB800E47090 /* ambrosia-Info.plist */,
@@ -225,6 +228,7 @@
 				1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */,
 				321D9FCB13579D4C0063757E /* bin in Resources */,
 				32CFE76D136A429F00BFCAEB /* ambrosia.icns in Resources */,
+				8995491F144451E600EAD01A /* fstab.patch in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

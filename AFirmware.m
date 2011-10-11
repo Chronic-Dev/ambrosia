@@ -47,13 +47,17 @@
 	NSString *ibecK = [[[self keyRepository] valueForKey:@"iBEC"] valueForKey:@"k"];
 	NSString *ibeciv = [[[self keyRepository] valueForKey:@"iBEC"] valueForKey:@"iv"];
 	
+	NSString *kcacheK = [[[self keyRepository] valueForKey:@"KernelCache"] valueForKey:@"k"];
+	NSString *kcacheiv = [[[self keyRepository] valueForKey:@"KernelCache"] valueForKey:@"iv"]; 
+	NSString *kcachePath = [[[[self manifest] valueForKey:@"KernelCache"] valueForKey:@"Info"] valueForKey:@"Path"];
+	
 	NSDictionary *restoreRamDisk = [NSDictionary dictionaryWithObjectsAndKeys:[[self RestoreRamDisk] lastPathComponent], @"File", rrdiv, @"IV", rrdK, @"Key", @"8", @"TypeFlag",nil];
 	NSDictionary *ibssDict = [NSDictionary dictionaryWithObjectsAndKeys:[[[[self manifest] valueForKey:@"iBSS"] valueForKey:@"Info"] valueForKey:@"Path"], @"File", ibssiv, @"IV", ibssK, @"Key", @"8", @"TypeFlag",nil];
 	NSDictionary *ibecDict = [NSDictionary dictionaryWithObjectsAndKeys:[[[[self manifest] valueForKey:@"iBEC"] valueForKey:@"Info"] valueForKey:@"Path"], @"File", ibeciv, @"IV", ibecK, @"Key", @"8", @"TypeFlag",nil];
+	NSDictionary *kcacheDict = [NSDictionary dictionaryWithObjectsAndKeys:kcachePath, @"File", kcacheiv, @"IV", kcacheK, @"Key", @"8", @"TypeFlag",nil];
+	return [NSDictionary dictionaryWithObjectsAndKeys:restoreRamDisk, @"Restore Ramdisk", ibssDict, @"iBSS", ibecDict, @"iBEC",kcacheDict, @"kernelcache", nil];
 	
-	return [NSDictionary dictionaryWithObjectsAndKeys:restoreRamDisk, @"Restore Ramdisk", ibssDict, @"iBSS", ibecDict, @"iBEC", nil];
-	
-}
+}//FIXME: missing patch path!!!!!
 
 - (NSString *)extractASR
 {
@@ -117,6 +121,9 @@
 - (NSString *)convertForBundle
 {
 	NSFileManager *man = [NSFileManager defaultManager];
+	
+	NSString *fstabPath = [[NSBundle bundleForClass:[AFirmware class]] pathForResource:@"fstab" ofType:@"patch"];
+	
 	NSMutableDictionary *bundleInfo = [[NSMutableDictionary alloc] init];
 	[bundleInfo setObject:[NSNumber numberWithBool:FALSE] forKey:@"DeleteBuildManifest"];
 	[bundleInfo setObject:@"" forKey:@"DownloadUrl"];
@@ -176,7 +183,9 @@
 	[man moveItemAtPath:ibssPatch toPath:bundleiBSS error:nil];
 	[man moveItemAtPath:kernelPatch toPath:bundleKernel error:nil];
 	
+	NSString *finalFstab = [bundleFolder stringByAppendingPathComponent:@"fstab.patch"];
 	
+	[man copyItemAtPath:fstabPath toPath:finalFstab error:nil];
 	
 	
 	
