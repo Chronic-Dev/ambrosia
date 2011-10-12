@@ -9,6 +9,31 @@
 #import <Cocoa/Cocoa.h>
 #import "AFirmwareFile.h"
 
+enum  {
+	
+	kAppleTVDevice,
+	kiPadDevice,
+	kiPhoneDevice,
+	kiPodDevice,
+	kUnknownDevice,
+};
+
+struct ADevice {
+	int platform;
+	int subplatform;
+};
+typedef struct ADevice ADevice;
+
+static inline ADevice ADeviceMake(int platform, int subplatform);
+
+static inline ADevice ADeviceMake(int platform, int subplatform)
+{
+	ADevice theDevice;
+	theDevice.platform = platform; theDevice.subplatform = subplatform;
+	return theDevice;
+}
+
+
 @interface AFirmware : NSObject {
 
 	NSString *filePath;

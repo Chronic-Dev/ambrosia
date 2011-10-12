@@ -40,6 +40,10 @@
 	
 	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(statusChanged:) name:@"statusChanged" object:nil];
 	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(updateCF:) name:@"updateCF" object:nil];
+	
+	ADevice testDevice = ADeviceMake(3, 10);
+	[AFirmware logDevice:testDevice];
+	
 }
 
 
@@ -520,6 +524,8 @@ void print_progress(double progress, void* data) {
 				[keysDict setValue:kbagArray forKey:@"kbagArray"];
 				[keysDict setValue:mountVolume forKey:@"mountVolume"];
 				[currentFirmware setMountVolume:mountVolume];
+				[currentFirmware setMountVolume:mountVolume];
+				NSLog(@"cf mv: %@", [currentFirmware mountVolume]);
 				NSArray *staticCacheList = [ACommon dyldcacheContentsFromVolume:mountVolume];
 				NSMutableArray *cacheList = [[NSMutableArray alloc] initWithArray:staticCacheList];
 				[keysDict setValue:staticCacheList forKey:@"dyldcache"];

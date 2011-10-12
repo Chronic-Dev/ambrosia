@@ -14,6 +14,12 @@
 
 @synthesize fwName, unzipLocation, filePath, vfDecryptKey, buildIdentity, mountVolume;
 
++ (void)logDevice:(ADevice)inputDevice
+{
+	NSString *deviceString = [NSString stringWithFormat:@"Device(%i,%i)", inputDevice.platform, inputDevice.subplatform];
+	NSLog(@"%@", deviceString);
+}
+
 - (NSString *)patchNameFromFile:(NSString *)original
 {
 	NSString *newNameBase  = [[[original componentsSeparatedByString:@"/"] lastObject] stringByDeletingPathExtension];
@@ -22,6 +28,55 @@
 	[patchFile appendString:@".patch"];
 	return [patchFile autorelease];
 }
+
+
+- (NSString *)deviceType
+{
+	NSString *firstLetter = [[self fwName] substringToIndex:1];
+	if ([firstLetter isEqualToString:@"i"]) //ipad or iphone oops forgot ipod dummy!! ;-P
+	{
+		NSString *clippedPath = [[self fwName] substringToIndex:5];
+		if ([clippedPath isEqualToString:@"iPhone"])
+		{
+			return [[self fwName] substringToIndex:11]; //should return 3,1 or whatever
+			
+		} else {
+			
+			return [[self fwName] substringToIndex:7]; //since iPod/iPad are both 4 letters this should return either one.
+		}
+		
+	}
+	
+	return @"AppleTV2,1";
+	
+		//iPhone3,1 5
+		//iPad1,1 7
+		//AppleTV 7 
+}
+
+- (int)deviceInt
+{
+	if ([[self deviceType] isEqualToString:@"iPhone"])
+	{
+		return kiPhoneDevice;
+		
+	} else if ([[self deviceType] isEqualToString:@"iPad"]){
+		
+		return kiPadDevice;
+		
+	} else if ([[self deviceType] isEqualToString:@"AppleTV"]) {
+		
+		return kAppleTVDevice;
+		
+	} else if ([[self deviceType] isEqualToString:@"iPod"]) {
+		
+		return kiPodDevice;
+		
+	}
+	
+	return kUnknownDevice;
+}
+
 
 - (NSDictionary *)firmwarePatches
 {
@@ -106,48 +161,48 @@
 	return nil;
 }
 
+- (ADevice)device
+{
+	NSString *currentDevice = [self deviceType];
+	NSLog(@"currentDevice: %@", currentDevice);
+	
+	if ([currentDevice isEqualToString:@"iPhone2,1"])
+		return ADeviceMake(1, 5);
+	else if ([currentDevice isEqualToString:@"iPhone3,1"])
+		return ADeviceMake(1, 6);
+	else if ([currentDevice isEqualToString:@"iPod4,1"])
+		return ADeviceMake(2, 9);
+	else if ([currentDevice isEqualToString:@"iPod3,1"])
+		return ADeviceMake(2, 8);
+	else if ([currentDevice isEqualToString:@"iPad1,1"])
+		return ADeviceMake(3, 3);
+	else if ([currentDevice isEqualToString:@"AppleTV2,1"])
+		return ADeviceMake(3, 10);
+	else
+		return ADeviceMake(0, 0);
+	
+	return ADeviceMake(0, 0);
+
+}
+/*
+ 
+ platform
+ 1 = iPhone
+ 2 = iPod
+ 3 = AppleTV/iPad1
+ 
+ subplatform
+ 3 = iPad1,1
+ 5 = iPhone2,1
+ 6 = iPhone3,1
+ 8 = iPod3,1
+ 9 = iPod4,1
+ 10 = AppleTV2,1
+ 
+ */
+
 - (NSDictionary *)defaultFilesystemPatches
 {
-	/*
-	 FilesystemPatches =     {
-	 "Filesystem Jailbreak" =         (
-	 {
-	 Action = Patch;
-	 File = "etc/fstab";
-	 Name = "Filesystem Write Access";
-	 Patch = "fstab.patch";
-	 },
-	 {
-	 Action = Patch;
-	 File = "Applications/AppleTV.app/AppleTV";
-	 Name = Seatbelt;
-	 Patch = "AppleTV.patch";
-	 }
-	 );
-	 );
-	 
-	 
-	 */
-	
-	/*
-	 
-	 <?xml version="1.0" encoding="UTF-8"?>
-	 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-	 <plist version="1.0">
-	 <dict>
-	 <key>Action</key>
-	 <string>Patch</string>
-	 <key>File</key>
-	 <string>Applications/AppleTV.app/AppleTV</string>
-	 <key>Name</key>
-	 <string>Seatbelt</string>
-	 <key>Patch</key>
-	 <string>AppleTV.patch</string>
-	 </dict>
-	 </plist>
-	 
-	 
-	 */
 	
 	NSDictionary *atvDict = [NSDictionary 
 							 dictionaryWithObjectsAndKeys:@"Patch", @"Action", @"Applications/AppleTV.app/AppleTV", 
@@ -191,12 +246,25 @@
 	[bundleInfo setObject:[self trimmedName] forKey:@"Name"];
 	[bundleInfo setObject:[[self OS] lastPathComponent] forKey:@"RootFilesystem"];
 	[bundleInfo setObject:@"ramdisk" forKey:@"RestoreRamdiskMountVolume"];
-	[bundleInfo setObject:[self.mountVolume lastPathComponent] forKey:@"RootFilesystemMountVolume"];
+	
+	NSString *rfsmv = [[self mountVolume] lastPathComponent];
+	
+	NSLog(@"rfsmv: %@", rfsmv);
+	if (rfsmv =! nil)
+		[bundleInfo setObject:[[self mountVolume] lastPathComponent] forKey:@"RootFilesystemMountVolume"];
+	
 	[bundleInfo setObject:[self vfDecryptKey] forKey:@"RootFilesystemKey"];
 	[bundleInfo setObject:@"1024" forKey:@"RootFilesystemSize"];
 	[bundleInfo setObject:[NSArray arrayWithObject:@"org.saurik.cydia"] forKey:@"PreInstalledPackages"];
 	[bundleInfo setObject:[ACommon SHA1FromFile:self.filePath] forKey:@"SHA1"];
 	[bundleInfo setObject:[self ramdiskPatches] forKey:@"RamdiskPatches"];
+	ADevice currentDevice = [self device];
+	
+	NSString *platform = [NSString stringWithFormat:@"%i", currentDevice.platform];
+	NSString *subplatform = [NSString stringWithFormat:@"%i", currentDevice.subplatform];
+	
+	[bundleInfo setObject:platform forKey:@"platform"];
+	[bundleInfo setObject:subplatform forKey:@"subplatform"];
 	
 	NSString *bundleFolder = [[[self unzipLocation] stringByAppendingPathComponent:[self trimmedName]] stringByAppendingPathExtension:@"bundle"];
 	NSString *infoPath = [bundleFolder stringByAppendingPathComponent:@"Info.plist"];
