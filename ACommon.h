@@ -24,6 +24,7 @@
 + (NSString *)SHA1FromFile:(NSString *)inputFile;
 + (NSArray *)dyldcacheContentsFromVolume:(NSString *)theVolume;
 + (NSString *)dyldcacheFileFromVolume:(NSString *)theVolume;
++ (NSString *)stringReturnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments;
 @end
 
 

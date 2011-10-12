@@ -72,6 +72,25 @@
 	
 }//FIXME: missing patch path!!!!!
 
+- (NSString *)extractAppleTVFromVolume:(NSString *)theVolume
+{
+	NSString *appletvFile = [theVolume stringByAppendingPathComponent:@"Applications/AppleTV.app/AppleTV"];
+	NSString *outputATV = [[self unzipLocation] stringByAppendingPathComponent:@"AppleTV"];
+	NSString *patchedATV = [[self unzipLocation] stringByAppendingPathComponent:@"AppleTV.patched"];
+	[[NSFileManager defaultManager] copyItemAtPath:appletvFile toPath:outputATV error:nil];
+	[[NSFileManager defaultManager] copyItemAtPath:appletvFile toPath:patchedATV error:nil];
+	return patchedATV;
+		/*
+		 
+		NSMutableDictionary *envDict = [[NSMutableDictionary alloc] init];
+		[envDict setObject: @"/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" forKey: @"CODESIGN_ALLOCATE"];
+		[mpTask setEnvironment:envDict];
+		[envDict release];
+		 
+		 */
+}
+
+
 - (NSString *)extractASR
 {
 	NSString *ramdiskPath = [[self RestoreRamDisk] stringByDeletingPathExtension];
@@ -109,9 +128,35 @@
 	 
 	 
 	 */
-	NSArray *patchArray = [NSArray arrayWithObject:[NSDictionary 
-													dictionaryWithObjectsAndKeys:@"Patch", @"Action", @"etc/fstab", 
-													@"File", @"Filesystem Write Access", @"Name", @"fstab.patch", @"Patch", nil]];
+	
+	/*
+	 
+	 <?xml version="1.0" encoding="UTF-8"?>
+	 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+	 <plist version="1.0">
+	 <dict>
+	 <key>Action</key>
+	 <string>Patch</string>
+	 <key>File</key>
+	 <string>Applications/AppleTV.app/AppleTV</string>
+	 <key>Name</key>
+	 <string>Seatbelt</string>
+	 <key>Patch</key>
+	 <string>AppleTV.patch</string>
+	 </dict>
+	 </plist>
+	 
+	 
+	 */
+	
+	NSDictionary *atvDict = [NSDictionary 
+							 dictionaryWithObjectsAndKeys:@"Patch", @"Action", @"Applications/AppleTV.app/AppleTV", 
+							 @"File", @"Seatbelt", @"Name", @"AppleTV.patch", @"Patch", nil];
+	NSDictionary *fstabDict = [NSDictionary 
+							   dictionaryWithObjectsAndKeys:@"Patch", @"Action", @"etc/fstab", 
+							   @"File", @"Filesystem Write Access", @"Name", @"fstab.patch", @"Patch", nil];
+	
+	NSArray *patchArray = [NSArray arrayWithObjects:atvDict, fstabDict, nil];
 
 	return [NSDictionary dictionaryWithObject:patchArray forKey:@"Filesystem Jailbreak"];
 }
@@ -201,7 +246,36 @@
 	[man copyItemAtPath:fstabPath toPath:finalFstab error:nil];
 	
 	
+	/*
+	 
+	 Still need to do AppleTV patch, for now we'll always do it for testing purposes
+	 
+	 */
 	
+	NSString *outputAtvDict = [[self unzipLocation] stringByAppendingPathComponent:@"AppleTV.plist"];
+	
+	NSString *atvFile = [self extractAppleTVFromVolume:self.mountVolume];
+	[ACommon writeCodesignDictionaryFromFile:atvFile toFile:outputAtvDict];
+	NSMutableDictionary *codesignDict = [[NSMutableDictionary alloc] initWithContentsOfFile:outputAtvDict];
+	[codesignDict removeObjectForKey:@"seatbelt-profiles"];
+	[codesignDict writeToFile:outputAtvDict atomically:YES];
+	[codesignDict release];
+	codesignDict = nil;
+	
+	[ACommon writeCodesign:outputAtvDict toFile:atvFile];
+	
+	NSString *vanillaATV = [atvFile stringByDeletingPathExtension];
+	
+	NSString *atvPatch = [patchClass createBSDiffFromOriginal:vanillaATV newFile:atvFile];
+	NSString *finalATVPatch = [bundleFolder stringByAppendingPathComponent:@"AppleTV.patch"];
+	
+	if ([man fileExistsAtPath:atvPatch])
+	{
+		NSLog(@"atv patch exists!. copying!");
+		[man copyItemAtPath:atvPatch toPath:finalATVPatch error:nil];
+		
+		
+	}
 	
 	
 	return infoPath;

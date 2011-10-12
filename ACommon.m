@@ -289,6 +289,47 @@
     return [s stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 }
 
++ (NSString *)stringReturnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments
+{
+	DebugLog(@"%@ %@", taskBinary, [taskArguments componentsJoinedByString:@" "]);
+	NSTask *task = [[NSTask alloc] init];
+	NSPipe *pipe = [[NSPipe alloc] init];
+	NSFileHandle *handle = [pipe fileHandleForReading];
+	
+	[task setLaunchPath:taskBinary];
+	[task setArguments:taskArguments];
+	[task setStandardOutput:pipe];
+	[task setStandardError:pipe];
+	
+	[task launch];
+	
+	NSData *outData = nil;
+    NSString *temp = nil;
+		//NSMutableArray *lineArray = [[NSMutableArray alloc] init];
+	
+	
+    while((outData = [handle readDataToEndOfFile]) && [outData length])
+    {
+			// temp = [[[NSString alloc] initWithData:outData encoding:NSASCIIStringEncoding] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		temp = [[NSString alloc] initWithData:outData encoding:NSASCIIStringEncoding];
+		DebugLog(@"temp length: %i", [temp length]);
+			//[lineArray addObject:temp];
+		
+			//[temp release];
+    }
+	
+	
+	
+		//DebugLog(@"lineArray: %@", lineArray);
+	[handle closeFile];
+	[task release];
+	
+	task = nil;
+	
+	return [temp autorelease];
+	
+}
+
 + (NSArray *)returnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments
 {
 	DebugLog(@"%@ %@", taskBinary, [taskArguments componentsJoinedByString:@" "]);
@@ -569,6 +610,43 @@
 	[[NSNotificationCenter defaultCenter] postNotificationName:@"unzipComplete" object:nil userInfo:theDict];
 	[pool release];
 }
+
+/*
+ 
+ NSMutableDictionary *envDict = [[NSMutableDictionary alloc] init];
+ [envDict setObject: @"/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" forKey: @"CODESIGN_ALLOCATE"];
+ [mpTask setEnvironment:envDict];
+ [envDict release];
+ 
+ */
+
++(NSDictionary *)environDict
+{
+	return [NSDictionary dictionaryWithObject:@"/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" forKey:@"CODESIGN_ALLOCATE"];
+}
+
++ (void)writeCodesign:(NSString *)newCodesign toFile:(NSString *)newFile
+{
+	NSTask *ldidTask = [[NSTask alloc] init];
+	[ldidTask setLaunchPath:LDID];
+	[ldidTask setEnvironment:[ACommon environDict]];
+	NSString *newString = [NSString stringWithFormat:@"-S%@", newCodesign];
+	[ldidTask setArguments:[NSArray arrayWithObjects:newString, newFile, nil]];
+	[ldidTask launch];
+	[ldidTask waitUntilExit];
+	[ldidTask release];
+	ldidTask = nil;
+	
+}
+
++ (void)writeCodesignDictionaryFromFile:(NSString *)inputFile toFile:(NSString *)outputFile
+{
+	
+	NSString *theOutput =  [ACommon stringReturnForTask:LDID withArguments:[NSArray arrayWithObjects:@"-e", inputFile, nil]];
+	[theOutput writeToFile:outputFile atomically:YES];
+}
+
+
 
 + (NSDictionary *)decryptFilesystemFromFirmware:(id)currentFirmware
 {
