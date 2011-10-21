@@ -654,6 +654,9 @@
 	NSString *outputFile = [[currentFirmware RestoreRamDisk] stringByDeletingPathExtension];
 	outputFile = [outputFile stringByAppendingString:@"_patched.dmg"];
 	NSDictionary *rdKeys = [currentFirmware ramdiskKey];
+	
+		//	NSLog(@"rdKeys: %@", rdKeys);
+	
 	if (rdKeys != nil)
 	{
 	

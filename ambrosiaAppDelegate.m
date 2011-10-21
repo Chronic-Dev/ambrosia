@@ -240,6 +240,7 @@
 			
 			if ([k length] != 64)
 			{
+				if (![currentKey isEqualToString:@"RestoreRamDisk"])
 				[stragglers addObject:[NSDictionary dictionaryWithObjectsAndKeys:currentKey, @"key", [NSString stringWithFormat:@"%i", properIndex], @"index", [kbagArray objectAtIndex:properIndex], @"kbag", nil]];
 				
 			}
@@ -523,6 +524,9 @@ void print_progress(double progress, void* data) {
 			{
 				[keysDict setValue:kbagArray forKey:@"kbagArray"];
 				[keysDict setValue:mountVolume forKey:@"mountVolume"];
+				NSDictionary *mountDict = [NSDictionary dictionaryWithObject:mountVolume forKey:@"mountVolume"];
+				[[NSNotificationCenter defaultCenter] postNotificationName:@"updateCF" object:nil userInfo:mountDict];
+				
 				[currentFirmware setMountVolume:mountVolume];
 				[currentFirmware setMountVolume:mountVolume];
 				NSLog(@"cf mv: %@", [currentFirmware mountVolume]);

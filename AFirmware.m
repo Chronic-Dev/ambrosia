@@ -29,6 +29,29 @@
 	return [patchFile autorelease];
 }
 
+- (NSString *)simpleDeviceType
+{
+	NSString *firstLetter = [[self fwName] substringToIndex:1];
+	if ([firstLetter isEqualToString:@"i"]) //ipad or iphone oops forgot ipod dummy!! ;-P
+	{
+		NSString *clippedPath = [[self fwName] substringToIndex:5];
+		if ([clippedPath isEqualToString:@"iPhone"])
+		{
+			return clippedPath;
+			
+		} else {
+			
+			return [[self fwName] substringToIndex:3]; //since iPod/iPad are both 4 letters this should return either one.
+		}
+		
+	}
+	
+	return @"AppleTV";
+	
+		//iPhone 5
+		//iPad 5
+		//AppleTV 7 
+}
 
 - (NSString *)deviceType
 {
@@ -56,19 +79,19 @@
 
 - (int)deviceInt
 {
-	if ([[self deviceType] isEqualToString:@"iPhone"])
+	if ([[self simpleDeviceType] isEqualToString:@"iPhone"])
 	{
 		return kiPhoneDevice;
 		
-	} else if ([[self deviceType] isEqualToString:@"iPad"]){
+	} else if ([[self simpleDeviceType] isEqualToString:@"iPad"]){
 		
 		return kiPadDevice;
 		
-	} else if ([[self deviceType] isEqualToString:@"AppleTV"]) {
+	} else if ([[self simpleDeviceType] isEqualToString:@"AppleTV"]) {
 		
 		return kAppleTVDevice;
 		
-	} else if ([[self deviceType] isEqualToString:@"iPod"]) {
+	} else if ([[self simpleDeviceType] isEqualToString:@"iPod"]) {
 		
 		return kiPodDevice;
 		
@@ -184,22 +207,6 @@
 	return ADeviceMake(0, 0);
 
 }
-/*
- 
- platform
- 1 = iPhone
- 2 = iPod
- 3 = AppleTV/iPad1
- 
- subplatform
- 3 = iPad1,1
- 5 = iPhone2,1
- 6 = iPhone3,1
- 8 = iPod3,1
- 9 = iPod4,1
- 10 = AppleTV2,1
- 
- */
 
 - (NSDictionary *)defaultFilesystemPatches
 {
@@ -211,7 +218,16 @@
 							   dictionaryWithObjectsAndKeys:@"Patch", @"Action", @"etc/fstab", 
 							   @"File", @"Filesystem Write Access", @"Name", @"fstab.patch", @"Patch", nil];
 	
-	NSArray *patchArray = [NSArray arrayWithObjects:atvDict, fstabDict, nil];
+	NSArray *patchArray = nil;
+	
+	if ([self deviceInt] == kAppleTVDevice) //only add atvdict for appletv firmware! duh!
+	{
+		patchArray = [NSArray arrayWithObjects:atvDict, fstabDict, nil];
+	
+	} else {
+	
+		patchArray = [NSArray arrayWithObject:fstabDict];
+	}
 
 	return [NSDictionary dictionaryWithObject:patchArray forKey:@"Filesystem Jailbreak"];
 }
@@ -249,7 +265,6 @@
 	
 	NSString *rfsmv = [[self mountVolume] lastPathComponent];
 	
-	NSLog(@"rfsmv: %@", rfsmv);
 	if (rfsmv =! nil)
 		[bundleInfo setObject:[[self mountVolume] lastPathComponent] forKey:@"RootFilesystemMountVolume"];
 	
@@ -283,18 +298,36 @@
 	
 	NSLog(@"creating patches....");
 	
-	[ACommon changeStatus:@"Creating patches...."];
+	[ACommon changeStatus:@"Creating patches..."];
 	
 	NSString *deciBSS = [[self iBSS] decryptedPath];
 	NSString *decCache = [[self KernelCache] decryptedPath];
 	NSString *deciBEC = [[self iBEC] decryptedPath];
 	
+	[ACommon changeStatus:@"Patching iBEC..."];
+	
+	NSLog(@"Patching iBEC...");
+	
 	NSString *ibecPatch = [patchClass patchDFUFile:deciBEC];
+	
+	[ACommon changeStatus:@"Patching iBSS..."];
+	
+	NSLog(@"Patching iBSS...");
+	
 	NSString *ibssPatch = [patchClass patchDFUFile:deciBSS];
+	
+	[ACommon changeStatus:@"Patching kernelcache..."];
+	
+	NSLog(@"Patching kernelcache...");
+	
 	NSString *kernelPatch = [patchClass patchKernelFile:decCache];
 	
 	if (asrPath != nil)
 	{
+		[ACommon changeStatus:@"Patching asr..."];
+		
+		NSLog(@"Patching asr...");
+		
 		NSString *asrPatch = [patchClass patchASRFile:asrPath];
 		NSString *bundleAsr = [bundleFolder stringByAppendingPathComponent:[asrPatch lastPathComponent]];
 		[man moveItemAtPath:asrPatch toPath:bundleAsr error:nil];
@@ -320,30 +353,40 @@
 	 
 	 */
 	
-	NSString *outputAtvDict = [[self unzipLocation] stringByAppendingPathComponent:@"AppleTV.plist"];
-	
-	NSString *atvFile = [self extractAppleTVFromVolume:self.mountVolume];
-	[ACommon writeCodesignDictionaryFromFile:atvFile toFile:outputAtvDict];
-	NSMutableDictionary *codesignDict = [[NSMutableDictionary alloc] initWithContentsOfFile:outputAtvDict];
-	[codesignDict removeObjectForKey:@"seatbelt-profiles"];
-	[codesignDict writeToFile:outputAtvDict atomically:YES];
-	[codesignDict release];
-	codesignDict = nil;
-	
-	[ACommon writeCodesign:outputAtvDict toFile:atvFile];
-	
-	NSString *vanillaATV = [atvFile stringByDeletingPathExtension];
-	
-	NSString *atvPatch = [patchClass createBSDiffFromOriginal:vanillaATV newFile:atvFile];
-	NSString *finalATVPatch = [bundleFolder stringByAppendingPathComponent:@"AppleTV.patch"];
-	
-	if ([man fileExistsAtPath:atvPatch])
+	if ([self deviceInt] == kAppleTVDevice)
 	{
-		NSLog(@"atv patch exists!. copying!");
-		[man copyItemAtPath:atvPatch toPath:finalATVPatch error:nil];
 		
+		[ACommon changeStatus:@"Patching AppleTV.app..."];
+		
+		NSLog(@"Patching AppleTV.app...");
+		
+		NSString *outputAtvDict = [[self unzipLocation] stringByAppendingPathComponent:@"AppleTV.plist"];
+		
+		NSString *atvFile = [self extractAppleTVFromVolume:self.mountVolume];
+		[ACommon writeCodesignDictionaryFromFile:atvFile toFile:outputAtvDict];
+		NSMutableDictionary *codesignDict = [[NSMutableDictionary alloc] initWithContentsOfFile:outputAtvDict];
+		[codesignDict removeObjectForKey:@"seatbelt-profiles"];
+		[codesignDict writeToFile:outputAtvDict atomically:YES];
+		[codesignDict release];
+		codesignDict = nil;
+		
+		[ACommon writeCodesign:outputAtvDict toFile:atvFile];
+		
+		NSString *vanillaATV = [atvFile stringByDeletingPathExtension];
+		
+		NSString *atvPatch = [patchClass createBSDiffFromOriginal:vanillaATV newFile:atvFile];
+		NSString *finalATVPatch = [bundleFolder stringByAppendingPathComponent:@"AppleTV.patch"];
+		
+		if ([man fileExistsAtPath:atvPatch])
+		{
+			NSLog(@"atv patch exists!. copying!");
+			[man copyItemAtPath:atvPatch toPath:finalATVPatch error:nil];
+			
+			
+		}
 		
 	}
+	
 	
 	
 	return infoPath;
@@ -433,7 +476,7 @@
 		NSString *rrdiv = [[[self keyRepository] valueForKey:@"RestoreRamDisk"] valueForKey:@"iv"];
 		NSString *rrdk = [[[self keyRepository] valueForKey:@"RestoreRamDisk"] valueForKey:@"k"];
 		BOOL encryptedRD = FALSE;
-		if (([rrdk length] > 0) && ([rrdiv length] > 0))
+		if (([rrdk length] > 5) && ([rrdiv length] > 5))
 			encryptedRD = TRUE;
 	
 		
