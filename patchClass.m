@@ -119,9 +119,6 @@
 	
 	//sandbox!?!?!? :D
 	
-	
-	
-	
 	//FindNPatch(KernelFile, "B0 F1 FF 3F DC BF 43 48 5C F7 0A FD", "00 00 00 00 00 00 00 00 00 00 00 00") '' //B0 F1 FF 3F DC BF 43 48 5C F7 E8 FC  instead?? @ offset 000B8C9C
 	
 	//b4			   B0 F1 FF 3F DC BF 43 48 5C F7 E8 FC 
