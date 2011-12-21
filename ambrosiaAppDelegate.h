@@ -21,6 +21,9 @@
 	
 	AFirmware *currentFirmware;
 }
+
+
+
 - (IBAction)poison:(id)sender;
 @property (assign) IBOutlet NSWindow *window;
 @property (assign) IBOutlet NSProgressIndicator *downloadBar;
@@ -47,4 +50,10 @@
 - (IBAction)sendCommand:(id)sender;
 - (void)processPFHeaders:(NSArray *)cacheArray fromCache:(NSString *)dyldcacheFile;
 - (void)processFHeaders:(NSArray *)cacheArray fromCache:(NSString *)dyldcacheFile;
+
+
+- (BOOL)hasDownloadLink:(NSDictionary *)theDict;
+- (NSDictionary *)dictionaryForWikiFirmware:(NSString *)theString;
+- (NSString *)dmgNameFromFullName:(NSString *)theName;
+- (BOOL)isDMG:(NSString *)theString;
 @end

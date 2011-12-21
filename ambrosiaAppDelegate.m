@@ -8,6 +8,13 @@
 
 #import "ambrosiaAppDelegate.h"
 
+#define WIKI_H3_XPATH					@"//h3"
+#define WIKI_UL_PATH					@"//ul/li"
+#define WIKI_VF_KEY_PATH				@"/html[1]/body[1]/div[3]/div[2]/ul[2]/li[1]"
+#define WIKI_SUMMARY_XPATH				@"/html[1]/body[1]/div[3]/div[2]/ul[1]"
+#define WIKI_DOWNLOAD_HREF				@"//li[starts-with(a/@href, 'http://appldnld.apple.com')]"
+#define WIKI_RESULT_LINK_XPATH			@"a/@href"
+
 
 @implementation NSString (specialAdditions) //this is why we need MSHookIvar to
 
@@ -41,14 +48,168 @@
 	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(statusChanged:) name:@"statusChanged" object:nil];
 	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(updateCF:) name:@"updateCF" object:nil];
 	
-	ADevice testDevice = ADeviceMake(3, 10);
-	[AFirmware logDevice:testDevice];
+//	ADevice testDevice = ADeviceMake(3, 10);
+//	[AFirmware logDevice:testDevice];
 	
 }
 
 
-	//@"7F8651BF1E81548A719A94BFF92C9A01980A3F3EDF0BED5D3F70D5BF266C92F37A3F0D817A434B04E693D94AB619B23F"
 
+- (BOOL)hasDownloadLink:(NSDictionary *)theDict
+{
+	if ([[theDict allKeys] containsObject:@"DownloadLink"])
+		return (TRUE);
+	
+	return (FALSE);
+}
+
+- (NSDictionary *)dictionaryForWikiFirmware:(NSString *)theString
+
+{
+	//http://theiphonewiki.com/wiki/index.php?title=Mojave_8M89_(Apple_TV_2G)
+	
+	NSMutableDictionary *newDictCity = [[NSMutableDictionary alloc] init];
+	
+	NSURL *url = [NSURL URLWithString:theString];
+	NSError * error = nil;
+	NSArray * results = nil;
+	NSArray * results2 = nil;
+	id children = nil;
+	NSXMLElement *downloadLink = nil;
+	NSString *finalLink = nil;
+	NSXMLDocument *document = [[NSXMLDocument alloc] initWithContentsOfURL:url options:NSXMLDocumentTidyHTML error:&error];
+	NSXMLElement *root = [document rootElement];	
+	//NSLog(@"root: %@", root);
+	NSString *resultTitle=[[[root objectsForXQuery:@"//title" error:&error]objectAtIndex:0] stringValue];
+	//NSLog(@"resultTitle: %@", resultTitle);
+	results = [root objectsForXQuery:WIKI_H3_XPATH error:&error];
+	results2 = [root objectsForXQuery:WIKI_UL_PATH error:&error];
+	children = [[root nodesForXPath:WIKI_SUMMARY_XPATH error:&error] lastObject]; //this helps discern what index to start at in the arrays.
+	downloadLink = [[root objectsForXQuery:WIKI_DOWNLOAD_HREF error:&error] lastObject];
+	finalLink = [[[downloadLink objectsForXQuery:WIKI_RESULT_LINK_XPATH error:&error] lastObject] stringValue];
+	
+	if (finalLink != nil)
+	{
+		//NSLog(@"finalLink: %@", finalLink);
+		[newDictCity setValue:finalLink forKey:@"DownloadLink"];
+		NSString *ipswName = [finalLink lastPathComponent];
+		[newDictCity setValue:ipswName forKey:@"FirmwareName"];
+	}
+	
+	//NSLog(@"downloadlink: %@", finalLink);
+	//NSLog(@"child count: %i", [children childCount]);
+	//NSLog(@"children: %@", children);
+	int i = [children childCount];
+	
+	NSXMLNode *currentR3 = nil;
+	BOOL hasKey = FALSE;
+	
+	id object = nil;
+	for (object in results)
+	{
+		hasKey = FALSE;
+		NSString *dmgName = nil;
+		//NSLog(@"%i", i);
+		NSString *keyValue = [object stringValue]; //name of the main dict key
+		NSXMLNode *currentR2 = [results2 objectAtIndex:i]; //this is the Key value that corresponds to keyValue
+		NSString *currentFirstValue = [currentR2 stringValue];
+		NSString *currentSecondValue = nil;
+		
+		//NSLog(@"%@", keyValue); 
+		//NSLog(@"%@", currentFirstValue); //current iv or key value
+		
+		if ([self isDMG:keyValue]) //if we are @"Root Filesystem", @"Update Ramdisk", @"Restore Ramdisk"
+		{
+			//if it is a DMG, trim out () and separate by spaces, grabbing second object.
+			NSString *cleanPath = [keyValue stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@" )"]];
+			cleanPath = [cleanPath stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+			dmgName = [[cleanPath componentsSeparatedByString:@"("] lastObject];
+			//NSLog(@"DMG path: %@", newPath);
+		}
+		
+		
+		if ([currentR2 nextSibling] != nil)
+		{
+			hasKey = TRUE;
+			currentR3 = [results2 objectAtIndex:i+1];
+			//NSLog(@"%@", [currentR3 stringValue]);
+			currentSecondValue = [[currentR3 stringValue] stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]];
+			i++;
+		}
+		
+		//NSLog(@"results2: %@", results2);
+		i++;
+		
+		
+		/* 
+		 
+		 add item to dictionary
+		 
+		 we still need to separate the IV/KEY values out.
+		 
+		 */
+		
+		NSMutableDictionary *currentItem = [[NSMutableDictionary alloc] init];
+		
+		//separate currentFIrstValue into value and key
+		
+		NSArray *objectOneComponents = [currentFirstValue componentsSeparatedByString:@": "];
+		NSArray *objectTwoComponents = [currentSecondValue componentsSeparatedByString:@": "];
+		
+		if ([objectOneComponents count] > 1)
+			[currentItem setValue:[objectOneComponents objectAtIndex:1] forKey:[objectOneComponents objectAtIndex:0]];
+		
+		
+		if ([objectTwoComponents count] > 1)
+			[currentItem setValue:[objectTwoComponents objectAtIndex:1] forKey:[objectTwoComponents objectAtIndex:0]];
+		
+		if (dmgName != nil)
+		{
+			[currentItem setValue:dmgName forKey:@"path"];
+			NSString *newValue = [self dmgNameFromFullName:keyValue];
+			keyValue = newValue;
+		}
+		
+		
+		[newDictCity setValue:currentItem forKey:keyValue];
+		
+		[currentItem release];
+		currentItem = nil;
+		
+		
+		
+	}
+	
+	
+	//NSLog(@"final Dict: %@", newDictCity);
+	
+	return [newDictCity autorelease];
+	
+}
+
+- (NSString *)dmgNameFromFullName:(NSString *)theName
+{
+	NSString *cleanPath = [theName stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@")"]];
+	NSString *clean2 = [[cleanPath componentsSeparatedByString:@"("] objectAtIndex:0];
+	int length = ([clean2 length]-1);
+	return [clean2 substringToIndex:length];
+}
+
+- (BOOL)isDMG:(NSString *)theString
+{
+	NSString *newName = [self dmgNameFromFullName:theString];
+	//NSLog(@"newName: -%@-", newName);
+	NSArray *dmgNames = [NSArray arrayWithObjects:@"Root Filesystem", @"Update Ramdisk", @"Restore Ramdisk", nil];
+	if ([dmgNames containsObject:newName])
+	{
+		
+		return (TRUE);
+		
+	}
+	
+	
+	return (FALSE);
+}
 
 
 - (void)setDownloadProgress:(double)theProgress
@@ -85,8 +246,33 @@
 	[downloadProgressField setNeedsDisplay:YES];
 }
 
-
 - (IBAction)testRun:(id)sender
+{
+	//[self sendCommand:self];
+	//return;
+	[sender setEnabled:FALSE];
+	NSOpenPanel *op = [NSOpenPanel openPanel];
+	[op runModalForTypes:[NSArray arrayWithObject:@"ipsw"]];
+	NSString *theFile = [op filename];
+	
+	
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(unzipFinished:) name:@"unzipComplete" object:nil];
+	currentFirmware = [[AFirmware alloc] initWithFile:theFile];
+	
+//	NSDictionary *theShit = [self firmwareDictFromIPSW:theFile];
+	
+//	NSLog(@"%@", theShit);
+	
+	
+	[self setDownloadText:@"Unzipping ipsw...."];
+	[self showProgress];
+	
+	
+	
+	
+}
+
+- (IBAction)oldtestRun:(id)sender
 {
 		//[self sendCommand:self];
 		//return;
@@ -488,15 +674,23 @@ void print_progress(double progress, void* data) {
 	
 	DebugLog(@"platform: %@", [currentFirmware platform]);
 	
-	
 	NSArray *kbagArray = [currentFirmware kbagArray];
 	
 	DebugLog(@"KbagArray: %@", kbagArray);
 	
 	if ([kbagArray count] > 1)
 	{
-		id keysDict = [self sendKbagArray:kbagArray];
-		DebugLog(@"keysDict: %@", keysDict);
+		id keysDict = nil;
+		if ([currentFirmware needsDecryption])
+		{
+			keysDict = [self sendKbagArray:kbagArray];
+			DebugLog(@"keysDict: %@", keysDict);
+		} else {
+			
+			NSLog(@"shouldnt need decryption, lets use the firmwaredict instead!");
+			keysDict = [currentFirmware firmwareDict];
+		}
+		
 		
 		NSString *firmwarePlist = [currentFirmware plistPath];
 		NSLog(@"%@", firmwarePlist);

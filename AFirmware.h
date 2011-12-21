@@ -42,6 +42,7 @@ static inline ADevice ADeviceMake(int platform, int subplatform)
 	NSString *vfDecryptKey;
 	int buildIdentity;
 	NSString *mountVolume;
+	BOOL needsDecryption;
 
 }
 
@@ -50,6 +51,7 @@ static inline ADevice ADeviceMake(int platform, int subplatform)
 @property (nonatomic, retain) NSString *unzipLocation;
 @property (nonatomic, retain) NSString *vfDecryptKey;
 @property (readwrite, assign) int buildIdentity;
+@property (readwrite, assign) BOOL needsDecryption;
 @property (nonatomic, retain) NSString *mountVolume;
 
 - (NSDictionary *)manifest;

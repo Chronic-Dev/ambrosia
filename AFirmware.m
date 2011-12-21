@@ -12,7 +12,125 @@
 
 @implementation AFirmware
 
-@synthesize fwName, unzipLocation, filePath, vfDecryptKey, buildIdentity, mountVolume;
+@synthesize fwName, unzipLocation, filePath, vfDecryptKey, buildIdentity, mountVolume, needsDecryption;
+
+
+#define IPAD11			@"K48ap"
+#define APPLETV21		@"K66ap"
+#define IPAD21			@"K93ap"
+#define IPAD22			@"K94ap"
+#define IPAD23			@"K95ap"
+#define IPOD31			@"N18ap"
+#define IPOD41			@"N81ap"
+#define IPHONE12		@"N82ap"
+#define IPHONE21		@"N88ap"
+#define IPHONE31		@"N90ap"
+#define IPHONE33		@"N92ap"
+#define IPHONE41		@"N94ap"
+
+
+- (NSString *)deviceTypeFromModel:(NSString *)modelType
+{
+	NSString *device = nil;
+	
+	if ([modelType isEqualToString:IPAD11])
+		device = @"iPad1,1";
+	if ([modelType isEqualToString:APPLETV21])
+		device = @"AppleTV2,1";
+	if ([modelType isEqualToString:IPAD21])
+		device = @"iPad2,1";
+	if ([modelType isEqualToString:IPAD22])
+		device = @"iPad2,2";
+	if ([modelType isEqualToString:IPAD23])
+		device = @"iPad2,3";
+	if ([modelType isEqualToString:IPOD31])
+		device = @"iPod3,1";
+	if ([modelType isEqualToString:IPOD41])
+		device = @"iPod4,1";
+	if ([modelType isEqualToString:IPHONE12])
+		device = @"iPhone1,2";
+	if ([modelType isEqualToString:IPHONE21])
+		device = @"iPhone2,1";
+	if ([modelType isEqualToString:IPHONE31])
+		device = @"iPhone3,1";
+	if ([modelType isEqualToString:IPHONE33])
+		device = @"iPhone3,3";
+	if ([modelType isEqualToString:IPHONE41])
+		device = @"iPhone4,1";
+	
+	
+	return device;
+	
+}
+
+
+
+- (NSString *)modelType
+{
+	//iPhone4,1_5.0_9A334_Restore.ipsw
+	
+	NSArray *ipswArray = [[self.filePath lastPathComponent] componentsSeparatedByString:@"_"];
+	NSString *theDevice = [ipswArray objectAtIndex:0];
+	//NSLog(@"theDevice:%@", theDevice);
+	if ([theDevice isEqualToString:@"iPad1,1"])
+		return IPAD11;
+	if ([theDevice isEqualToString:@"AppleTV2,1"])
+		return APPLETV21;
+	if ([theDevice isEqualToString:@"iPad2,1"])
+		return IPAD21;
+	if ([theDevice isEqualToString:@"iPad2,2"])
+		return IPAD22;
+	if ([theDevice isEqualToString:@"iPad2,3"])
+		return IPAD23;
+	if ([theDevice isEqualToString:@"iPod3,1"])
+		return IPOD31;
+	if ([theDevice isEqualToString:@"iPod4,1"])
+		return IPOD41;
+	if ([theDevice isEqualToString:@"iPhone1,2"])
+		return IPHONE12;
+	if ([theDevice isEqualToString:@"iPhone2,1"])
+		return IPHONE21;
+	if ([theDevice isEqualToString:@"iPhone3,1"])
+		return IPHONE31;
+	if ([theDevice isEqualToString:@"iPhone3,1"])
+		return IPHONE33;
+	if ([theDevice isEqualToString:@"iPhone4,1"])
+		return IPHONE41;
+	
+	return nil;
+}
+
+- (NSString *)archivedFirmwareDict
+{
+	NSArray *ipswArray = [[self.filePath lastPathComponent] componentsSeparatedByString:@"_"];
+	NSString *theBuild = [ipswArray objectAtIndex:2]; //ie 9A334
+	NSString *modelType = [self modelType];
+	//	NSLog(@"modelType: %@", modelType);
+	
+	return [[NSBundle mainBundle] pathForResource:modelType ofType:@"plist" inDirectory:@"fw"];
+	
+}
+
+- (NSDictionary *)firmwareDict
+{
+
+	NSArray *ipswArray = [[self.filePath lastPathComponent] componentsSeparatedByString:@"_"];
+	NSString *theBuild = [ipswArray objectAtIndex:2]; //ie 9A334
+	NSString *modelType = [self modelType];
+	NSString *dictName = [[NSBundle mainBundle] pathForResource:modelType ofType:@"plist" inDirectory:@"fw"];
+	
+	if (dictName == nil)
+	{
+		NSLog(@"no dict yet! need to decrypt it ourselves!");
+		return nil;	
+	}
+		
+	NSDictionary *fwDict = [NSDictionary dictionaryWithContentsOfFile:dictName];
+	
+	return [fwDict valueForKey:theBuild];
+}
+
+
 
 + (void)logDevice:(ADevice)inputDevice
 {
@@ -353,6 +471,11 @@
 	 
 	 */
 	
+	
+	//commenting out for now, i dont think it even works anymore
+	
+	/*
+	
 	if ([self deviceInt] == kAppleTVDevice)
 	{
 		
@@ -387,7 +510,7 @@
 		
 	}
 	
-	
+	*/
 	
 	return infoPath;
 		//FIXME: need Platform and SubPlatform
@@ -396,7 +519,13 @@
 }
 
 
-
+- (BOOL)hasFWDict
+{
+	if ([self archivedFirmwareDict] != nil)
+		return (TRUE);
+	
+	return (FALSE);
+}
 
 
 - (id)initWithFile:(NSString *)theFile
@@ -414,6 +543,9 @@
 				//return self;
 		}
 		[FM createDirectoryAtPath:unzipLocation withIntermediateDirectories:YES attributes:nil error:nil];
+		
+		self.needsDecryption = ![self hasFWDict];
+		
 		[[ACommon sharedCommon] unzipFile:filePath toPath:unzipLocation];
 		
 
