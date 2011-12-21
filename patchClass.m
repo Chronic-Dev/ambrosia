@@ -93,6 +93,8 @@
 	
 	[myData replaceBytesInRange: dataRange withBytes: [patchData bytes]];
 	
+	NSLog(@"codesigning kernel patch location: 0x%x data: %@", dataRange.location, patchData);
+
 	//	NSLog(@"first patch location: %lld", dataRange.location);
 	
 	if ([[[inputFile lastPathComponent] pathExtension] isEqualToString:@"k66"]) //dont need for appletv
@@ -113,7 +115,12 @@
 		if (dataRange.location == NSNotFound)
 		{
 			NSLog(@"vm_map_enter kernel patch failed, %@ not found", dataToFind);
+		} else {
+			
+			NSLog(@"vm_map_enter kernel patch location: 0x%x data: %@", dataRange.location, patchData);
 		}
+		
+		
 	}
 	
 	
@@ -140,12 +147,17 @@
 	dataRange.length = 12;
 	[myData replaceBytesInRange: dataRange withBytes: [patchData bytes]];
 	
+	
 	//NSLog(@"third kernel patch location: %lld length: %lld", dataRange.location, dataRange.length);
-	//	NSLog(@"third kernel patch location2: %lld length: %lld", dataRange2.location, dataRange2.length);
+	//NSLog(@"third kernel patch location2: %lld length: %lld", dataRange2.location, dataRange2.length);
 	
 	if (dataRange.location == NSNotFound)
 	{
 		NSLog(@"third kernel patch failed, %@ not found", dataToFind);
+	} else {
+		
+		NSLog(@"third kernel patch location: 0x%x data: %@", dataRange.location, patchData);
+		
 	}
 	
 	
@@ -159,6 +171,10 @@
 	if (dataRange.location == NSNotFound)
 	{
 		NSLog(@"fourth kernel patch failed, %@ not found", dataToFind);
+	} else {
+		
+		NSLog(@"fourth kernel patch location: 0x%x data: %@", dataRange.location, patchData);
+		
 	}
 	
 	/*
@@ -184,6 +200,10 @@
 	if (dataRange.location == NSNotFound)
 	{
 		NSLog(@"sandbox patch failed, %@ not found", dataToFind);
+	} else {
+		
+		NSLog(@"sandbox kernel patch location: 0x%x data: %@", dataRange.location, patchData);
+		
 	}
 	
 	
@@ -211,6 +231,10 @@
 	if (dataRange.location == NSNotFound)
 	{
 		NSLog(@"amfi1 patch failed, %@ not found", dataToFind);
+	} else {
+		
+		NSLog(@"amfi1 kernel patch location: 0x%x data: %@", dataRange.location, patchData);
+		
 	}
 	
 	//FindNPatch(KernelFile, "FF 31 A7 F1 18 04 08 46 A5 46 BD E8 00 0D F0 BD", "FF 31 A7 F1 18 04 00 20")
@@ -223,6 +247,10 @@
 	if (dataRange.location == NSNotFound)
 	{
 		NSLog(@"amfi2 kernel patch failed, %@ not found", dataToFind);
+	} else {
+		
+		NSLog(@"amfi2 kernel patch location: 0x%x data: %@", dataRange.location, patchData);
+		
 	}
 	
 	

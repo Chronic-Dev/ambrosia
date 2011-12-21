@@ -734,6 +734,17 @@ void print_progress(double progress, void* data) {
 				DebugLog(@"Private Frameworks: %@", cacheList);
 				DebugLog(@"Private Frameworks count: %i", [cacheList count]);
 				
+				NSLog(@"extracting dyldcache...");
+				
+				NSString *dyldfile = [ACommon dyldcacheFileFromVolume:mountVolume];
+				
+				NSString *copiedFile = [[currentFirmware unzipLocation] stringByAppendingPathComponent:@"dyld_shared_cache_armv7"];
+				
+				[FM copyItemAtPath:dyldfile toPath:copiedFile error:nil];
+				
+				//dyld_shared_cache_armv7
+				
+				
 				[self setDownloadText:@"Dumping PrivateFrameworks Headers..."];
 				[self processPFHeaders:cacheList fromCache:[ACommon dyldcacheFileFromVolume:mountVolume]];
 				[cacheList removeAllObjects];
@@ -753,7 +764,7 @@ void print_progress(double progress, void* data) {
 			
 			
 			[keysDict writeToFile:firmwarePlist atomically:YES];
-			[[NSWorkspace sharedWorkspace] openFile:firmwarePlist];
+		//	[[NSWorkspace sharedWorkspace] openFile:firmwarePlist];
 			[self setDownloadText:@"Creating wiki text..."];
 			NSString *convertForWiki = [currentFirmware convertForWiki];
 				//NSLog(@"convertForWiki: %@", convertForWiki);			
@@ -797,13 +808,14 @@ void print_progress(double progress, void* data) {
 		[self setDownloadText:@"Creating PT/SP Bundle..."];
 		
 		NSString *infoBundle = [currentFirmware convertForBundle];
-		[[NSWorkspace sharedWorkspace] openFile:infoBundle];
+		//[[NSWorkspace sharedWorkspace] openFile:infoBundle];
 		
 		
 	}
 	
 	[self setDownloadText:@"Finished!!"];
 	
+	[self cleanup];
 		//iBSS, iBoot, kernelcache
 	
 	[currentFirmware release];
@@ -811,6 +823,16 @@ void print_progress(double progress, void* data) {
 	[self hideProgress];
 		
 	[self startOverMan];
+}
+
+- (void)cleanup
+{
+	if ([FM fileExistsAtPath:@"/Volumes/ramdisk"])
+		[ACommon detachImage:@"/Volumes/ramdisk"];
+	
+	if ([FM fileExistsAtPath:[currentFirmware mountVolume]])
+		[ACommon detachImage:[currentFirmware mountVolume]];
+	
 }
 
 - (void)processPFHeaders:(NSArray *)cacheArray fromCache:(NSString *)dyldcacheFile

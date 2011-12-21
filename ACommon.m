@@ -159,6 +159,30 @@
 	
 }
 
++ (void)detachImage:(NSString *)irString
+{
+	NSTask *irTask = [[NSTask alloc] init];
+	NSMutableArray *irArgs = [[NSMutableArray alloc] init];
+	
+	[irArgs addObject:@"detach"];
+	[irArgs addObject:irString];
+	
+	[irTask setLaunchPath:@"/usr/bin/hdiutil"];
+	
+	[irTask setArguments:irArgs];
+	
+	[irArgs release];
+	
+
+	//DebugLog(@"hdiutil %@", [[irTask arguments] componentsJoinedByString:@" "]);
+	[irTask launch];
+	[irTask waitUntilExit];
+	
+	
+	
+	[irTask release];
+	irTask = nil;	
+}
 
 + (NSString *)mountImage:(NSString *)irString
 {
