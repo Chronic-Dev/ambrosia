@@ -744,6 +744,19 @@ void print_progress(double progress, void* data) {
 				
 				//dyld_shared_cache_armv7
 				
+				NSLog(@"extracting system libs...");
+				
+				[ACommon extractSystemLibsFromVolume:mountVolume toPath:[currentFirmware unzipLocation]];
+				
+				NSArray *kernelSymbols = [self dumpKernelSymbolsFromFirmwareFolder:[currentFirmware unzipLocation]];
+				
+				NSLog(@"kernelSymbols: %@", kernelSymbols);
+				
+				NSArray *cSymbols = [self dumpCSymbolsFromFirmwareFolder:[currentFirmware unzipLocation]];
+				
+				NSLog(@"cSymbols: %@", cSymbols);
+				
+				
 				
 				[self setDownloadText:@"Dumping PrivateFrameworks Headers..."];
 				[self processPFHeaders:cacheList fromCache:[ACommon dyldcacheFileFromVolume:mountVolume]];
@@ -823,6 +836,85 @@ void print_progress(double progress, void* data) {
 	[self hideProgress];
 		
 	[self startOverMan];
+}
+
+- (NSArray *)libsystemCSymbols
+{
+	return [NSArray arrayWithObjects:@"_exit", @"_fopen", @"_fread", @"_fclose", @"_syslog", nil];
+}
+
+- (NSArray *)libsystemKernelSymbols
+{
+	return [NSArray arrayWithObjects:@"_mmap", @"_open", @"_mkdir", @"_ioctl", @"_close", @"_mount", @"_unmount" , @"_syscall", @"_zfree", 
+			@"_sysent", @"_IOLog", nil];
+}
+
+- (NSArray *)dumpKernelSymbolsFromFirmwareFolder:(NSString *)outputFolder
+{
+	NSArray *kSymbols = [self libsystemKernelSymbols];
+	NSMutableArray *mutArray = [[NSMutableArray alloc] init];
+	id object = nil;
+	for (object in kSymbols)
+	{
+		NSArray *arguments = [NSArray arrayWithObjects:@"dyld_shared_cache_armv7", @"libsystem_kernel.dylib", object, nil];
+		NSString *returnString = [ACommon stringReturnForTask:DYLDROP withArguments:arguments fromLocation:outputFolder];
+		if (returnString != nil)
+			[mutArray addObject:returnString];
+		else 
+			NSLog(@"object symbol failed; %@", object);
+		//dyldrop dyld_shared_cache_armv7 libsystem_kernel.dylib _open 2> /dev/null
+		
+	}
+	return [mutArray autorelease];
+
+}
+
+- (NSArray *)dumpCSymbolsFromFirmwareFolder:(NSString *)outputFolder
+{
+	NSArray *cSymbols = [self libsystemCSymbols];
+	NSMutableArray *mutArray = [[NSMutableArray alloc] init];
+	id object = nil;
+	for (object in cSymbols)
+	{
+		NSArray *arguments = [NSArray arrayWithObjects:@"dyld_shared_cache_armv7", @"libsystem_c.dylib", object, nil];
+		NSString *returnString = [ACommon stringReturnForTask:DYLDROP withArguments:arguments fromLocation:outputFolder];
+		if (returnString != nil)
+			[mutArray addObject:returnString];
+		else 
+			NSLog(@"object symbol failed; %@", object);
+		//dyldrop dyld_shared_cache_armv7 libsystem_kernel.dylib _open 2> /dev/null
+														
+	}
+	return [mutArray autorelease];
+	
+
+	/*
+	 
+	 _exit, _fopen, _fread, and _fclose are all in libsystem_c.dylib
+	 
+	 
+	 / Dyldcache Offsets
+	 
+	 _syslog
+	 _mmap
+	 _open
+	 _mkdir
+	 _ioctl
+	 _close
+	 _exit
+	 _mount
+	 _unmount
+	 _fopen
+	 _fclose
+	 _fread
+	 _syscall
+	 
+	 / Kernel Offsets
+	 _zfree
+	 _sysent
+	 _IOLog
+	 
+	 */
 }
 
 - (void)cleanup

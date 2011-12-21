@@ -74,6 +74,17 @@
 	return nil;
 }
 
++ (NSArray *)extractSystemLibsFromVolume:(NSString *)theVolume toPath:(NSString *)outputPath
+{
+	NSString *dyldcacheFile = [self dyldcacheFileFromVolume:theVolume];
+	NSArray *arguments = [NSArray arrayWithObjects:dyldcacheFile, @"/usr/lib/system/libsystem_c.dylib", @"/usr/lib/system/libsystem_kernel.dylib", nil];
+	NSArray *theArray = [ACommon returnForTask:DYLDCACHE withArguments:arguments fromPath:outputPath];
+	
+	[FM moveItemAtPath:[outputPath stringByAppendingPathComponent:@"out/usr/lib/system/libsystem_c.dylib"] toPath:[outputPath stringByAppendingPathComponent:@"libsystem_c.dylib"] error:nil];
+	[FM moveItemAtPath:[outputPath stringByAppendingPathComponent:@"out/usr/lib/system/libsystem_kernel.dylib"] toPath:[outputPath stringByAppendingPathComponent:@"libsystem_kernel.dylib"] error:nil];
+	
+}
+
 + (NSArray *)dyldcacheContentsFromVolume:(NSString *)theVolume
 {
 	NSString *dyldcacheFile = [self dyldcacheFileFromVolume:theVolume];
@@ -313,9 +324,51 @@
     return [s stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 }
 
-+ (NSString *)stringReturnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments
++ (NSString *)stringReturnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments fromLocation:(NSString *)outputPath
 {
 	DebugLog(@"%@ %@", taskBinary, [taskArguments componentsJoinedByString:@" "]);
+	NSTask *task = [[NSTask alloc] init];
+	NSPipe *pipe = [[NSPipe alloc] init];
+	NSFileHandle *handle = [pipe fileHandleForReading];
+	
+	[task setCurrentDirectoryPath:outputPath];
+	[task setLaunchPath:taskBinary];
+	[task setArguments:taskArguments];
+	[task setStandardOutput:pipe];
+	[task setStandardError:NULLOUT];
+	
+	[task launch];
+	
+	NSData *outData = nil;
+    NSString *temp = nil;
+	//NSMutableArray *lineArray = [[NSMutableArray alloc] init];
+	
+	
+    while((outData = [handle readDataToEndOfFile]) && [outData length])
+    {
+		// temp = [[[NSString alloc] initWithData:outData encoding:NSASCIIStringEncoding] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		temp = [[NSString alloc] initWithData:outData encoding:NSASCIIStringEncoding];
+		DebugLog(@"temp length: %i", [temp length]);
+		//[lineArray addObject:temp];
+		
+		//[temp release];
+    }
+	
+	
+	
+	//DebugLog(@"lineArray: %@", lineArray);
+	[handle closeFile];
+	[task release];
+	
+	task = nil;
+	
+	return [temp autorelease];
+	
+}
+
++ (NSString *)stringReturnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments
+{
+	NSLog(@"%@ %@", taskBinary, [taskArguments componentsJoinedByString:@" "]);
 	NSTask *task = [[NSTask alloc] init];
 	NSPipe *pipe = [[NSPipe alloc] init];
 	NSFileHandle *handle = [pipe fileHandleForReading];
@@ -351,6 +404,48 @@
 	task = nil;
 	
 	return [temp autorelease];
+	
+}
+
++ (NSArray *)returnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments fromPath:(NSString *)runFolder
+{
+	DebugLog(@"%@ %@", taskBinary, [taskArguments componentsJoinedByString:@" "]);
+	NSTask *task = [[NSTask alloc] init];
+	NSPipe *pipe = [[NSPipe alloc] init];
+	NSFileHandle *handle = [pipe fileHandleForReading];
+	
+	[task setCurrentDirectoryPath:runFolder];
+	[task setLaunchPath:taskBinary];
+	[task setArguments:taskArguments];
+	[task setStandardOutput:pipe];
+	[task setStandardError:pipe];
+	
+	[task launch];
+	
+	NSData *outData = nil;
+    NSString *temp = nil;
+    NSMutableArray *lineArray = [[NSMutableArray alloc] init];
+	
+	
+    while((outData = [handle readDataToEndOfFile]) && [outData length])
+    {
+		// temp = [[[NSString alloc] initWithData:outData encoding:NSASCIIStringEncoding] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		temp = [[NSString alloc] initWithData:outData encoding:NSASCIIStringEncoding];
+		DebugLog(@"temp length: %i", [temp length]);
+		//[lineArray addObject:temp];
+		[lineArray addObjectsFromArray:[temp componentsSeparatedByString:@"\n"]];
+		[temp release];
+    }
+	
+	
+	
+	DebugLog(@"lineArray: %@", lineArray);
+	[handle closeFile];
+	[task release];
+	
+	task = nil;
+	
+	return [lineArray autorelease];
 	
 }
 

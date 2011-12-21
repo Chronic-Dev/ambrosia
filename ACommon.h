@@ -5,7 +5,8 @@
 {
 	
 }
-
++ (NSArray *)extractSystemLibsFromVolume:(NSString *)theVolume toPath:(NSString *)outputPath;
++ (NSArray *)returnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments fromPath:(NSString *)runFolder;
 + (id)sharedCommon;
 + (NSDictionary *)decryptedKbag:(NSString *)theKbag;
 + (NSString *)mountImage:(NSString *)irString;
@@ -25,6 +26,7 @@
 + (NSArray *)dyldcacheContentsFromVolume:(NSString *)theVolume;
 + (NSString *)dyldcacheFileFromVolume:(NSString *)theVolume;
 + (NSString *)stringReturnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments;
++ (NSString *)stringReturnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments fromLocation:(NSString *)outputPath;
 @end
 
 

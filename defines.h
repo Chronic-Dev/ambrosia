@@ -2,6 +2,8 @@
 #import "ACommon.h"
 #import "AFirmware.h"
 
+#define DYLDROP [[NSBundle mainBundle] pathForResource:@"dyldrop" ofType:@"" inDirectory:@"bin"]
+#define MACHOMAN [[NSBundle mainBundle] pathForResource:@"machoman" ofType:@"" inDirectory:@"bin"]
 #define VFDECRYPT [[NSBundle mainBundle] pathForResource:@"vfdecrypt" ofType:@"" inDirectory:@"bin"]
 #define GENPASS [[NSBundle mainBundle] pathForResource:@"genpass" ofType:@"" inDirectory:@"bin"]
 #define GRABKBAG [[NSBundle mainBundle] pathForResource:@"grabkbag" ofType:@"" inDirectory:@"bin"]
