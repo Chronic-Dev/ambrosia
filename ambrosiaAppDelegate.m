@@ -752,10 +752,14 @@ void print_progress(double progress, void* data) {
 				
 				NSLog(@"kernelSymbols: %@", kernelSymbols);
 				
+				[keysDict setValue:kernelSymbols forKey:@"KernelSymbolOffsets"];
+				
+				
 				NSArray *cSymbols = [self dumpCSymbolsFromFirmwareFolder:[currentFirmware unzipLocation]];
 				
 				NSLog(@"cSymbols: %@", cSymbols);
 				
+				[keysDict setValue:cSymbols forKey:@"CSymbolOffsets"];
 				
 				
 				[self setDownloadText:@"Dumping PrivateFrameworks Headers..."];

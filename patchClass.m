@@ -74,6 +74,12 @@
  
  */
 
++ (NSString *)virtualSymbolFromFile:(NSString *)inputFile withLocation:(NSString *)theLocation
+{
+	return [ACommon stringReturnForTask:MACHOMAN withArguments:[NSArray arrayWithObjects:inputFile, theLocation, nil] fromLocation:[inputFile stringByDeletingLastPathComponent]];
+	
+}
+
 + (NSString *)patchKernelFile:(NSString *)inputFile
 {
 	NSMutableData *myData = [[NSMutableData alloc] initWithContentsOfMappedFile:inputFile];
@@ -93,7 +99,10 @@
 	
 	[myData replaceBytesInRange: dataRange withBytes: [patchData bytes]];
 	
-	NSLog(@"codesigning kernel patch location: 0x%x data: %@", dataRange.location, patchData);
+	NSLog(@"codesigning kernel patch location: 0x%08x search pattern: %@ new data: %@", dataRange.location, dataToFind, patchData);
+	NSString *location = [NSString stringWithFormat:@"0x%08x", dataRange.location];
+	NSString *proper = [patchClass virtualSymbolFromFile:inputFile withLocation:location];
+	NSLog(@"codesigning kernel patch virtual location: %@", proper);
 
 	//	NSLog(@"first patch location: %lld", dataRange.location);
 	
@@ -117,7 +126,11 @@
 			NSLog(@"vm_map_enter kernel patch failed, %@ not found", dataToFind);
 		} else {
 			
-			NSLog(@"vm_map_enter kernel patch location: 0x%x data: %@", dataRange.location, patchData);
+			NSLog(@"vm_map_enter kernel patch location: 0x%08x search pattern: %@ new data: %@", dataRange.location, dataToFind, patchData);
+			location = [NSString stringWithFormat:@"0x%08x", dataRange.location];
+			proper = [patchClass virtualSymbolFromFile:inputFile withLocation:location];
+			NSLog(@"vm_map_enter kernel patch virtual location: %@", proper);
+			
 		}
 		
 		
@@ -156,8 +169,10 @@
 		NSLog(@"third kernel patch failed, %@ not found", dataToFind);
 	} else {
 		
-		NSLog(@"third kernel patch location: 0x%x data: %@", dataRange.location, patchData);
-		
+		NSLog(@"third kernel patch location: 0x%08x search pattern: %@ new data: %@", dataRange.location, dataToFind, patchData);
+		location = [NSString stringWithFormat:@"0x%08x", dataRange.location];
+		proper = [patchClass virtualSymbolFromFile:inputFile withLocation:location];
+		NSLog(@"third kernel patch virtual location: %@", proper);
 	}
 	
 	
@@ -173,8 +188,10 @@
 		NSLog(@"fourth kernel patch failed, %@ not found", dataToFind);
 	} else {
 		
-		NSLog(@"fourth kernel patch location: 0x%x data: %@", dataRange.location, patchData);
-		
+		NSLog(@"fourth kernel patch location: 0x%08x search pattern: %@ new data: %@", dataRange.location, dataToFind, patchData);
+		location = [NSString stringWithFormat:@"0x%08x", dataRange.location];
+		proper = [patchClass virtualSymbolFromFile:inputFile withLocation:location];
+		NSLog(@"fourth kernel patch virtual location: %@", proper);
 	}
 	
 	/*
@@ -202,8 +219,10 @@
 		NSLog(@"sandbox patch failed, %@ not found", dataToFind);
 	} else {
 		
-		NSLog(@"sandbox kernel patch location: 0x%x data: %@", dataRange.location, patchData);
-		
+		NSLog(@"sandbox kernel patch location: 0x%08x search pattern: %@ new data: %@", dataRange.location, dataToFind, patchData);
+		location = [NSString stringWithFormat:@"0x%08x", dataRange.location];
+		proper = [patchClass virtualSymbolFromFile:inputFile withLocation:location];
+		NSLog(@"sandbox kernel patch virtual location: %@", proper);
 	}
 	
 	
@@ -233,8 +252,10 @@
 		NSLog(@"amfi1 patch failed, %@ not found", dataToFind);
 	} else {
 		
-		NSLog(@"amfi1 kernel patch location: 0x%x data: %@", dataRange.location, patchData);
-		
+		NSLog(@"amfi1 kernel patch location: 0x%08x search pattern: %@ new data: %@", dataRange.location, dataToFind, patchData);
+		location = [NSString stringWithFormat:@"0x%08x", dataRange.location];
+		proper = [patchClass virtualSymbolFromFile:inputFile withLocation:location];
+		NSLog(@"amfi1 kernel patch virtual location: %@", proper);
 	}
 	
 	//FindNPatch(KernelFile, "FF 31 A7 F1 18 04 08 46 A5 46 BD E8 00 0D F0 BD", "FF 31 A7 F1 18 04 00 20")
@@ -249,8 +270,10 @@
 		NSLog(@"amfi2 kernel patch failed, %@ not found", dataToFind);
 	} else {
 		
-		NSLog(@"amfi2 kernel patch location: 0x%x data: %@", dataRange.location, patchData);
-		
+		NSLog(@"amfi2 kernel patch location: 0x%08x search pattern: %@ new data: %@", dataRange.location, dataToFind, patchData);
+		location = [NSString stringWithFormat:@"0x%08x", dataRange.location];
+		proper = [patchClass virtualSymbolFromFile:inputFile withLocation:location];
+		NSLog(@"amfi2 kernel patch virtual location: %@", proper);
 	}
 	
 	
