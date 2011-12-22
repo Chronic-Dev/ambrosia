@@ -766,7 +766,9 @@ void print_progress(double progress, void* data) {
 				
 				[constantsData setValue:cSymbols forKey:@"CSymbolOffsets"];
 				
+				//for now im taking out the header dumps, slowing me down too much.
 				
+				/*
 				
 				[self setDownloadText:@"Dumping PrivateFrameworks Headers..."];
 				[self processPFHeaders:cacheList fromCache:[ACommon dyldcacheFileFromVolume:mountVolume]];
@@ -780,6 +782,8 @@ void print_progress(double progress, void* data) {
 				[self setDownloadText:@"Dumping Frameworks Headers..."];
 				[self processFHeaders:cacheList fromCache:[ACommon dyldcacheFileFromVolume:mountVolume]];
 				
+				 
+				 */
 					
 				
 				
@@ -793,7 +797,7 @@ void print_progress(double progress, void* data) {
 				//NSLog(@"convertForWiki: %@", convertForWiki);			
 			NSString *wikiPath = [currentFirmware wikiPath];
 			[convertForWiki writeToFile:wikiPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
-			[[NSWorkspace sharedWorkspace] openFile:wikiPath];
+			//[[NSWorkspace sharedWorkspace] openFile:wikiPath];
 			
 			
 			
@@ -920,7 +924,7 @@ void print_progress(double progress, void* data) {
 	
 	[constantsTemplate replaceOccurrencesOfString:@"AMB_IOLOG" withString:ioLogOffset options:0 range:NSMakeRange(0, [constantsTemplate length])];
 	
-	NSLog(@"constantsTemplate; %@", constantsTemplate);
+	//NSLog(@"constantsTemplate; %@", constantsTemplate);
 	
 	[constantsTemplate writeToFile:outputFile atomically:YES];
 	[constantsTemplate release];

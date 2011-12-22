@@ -92,7 +92,7 @@
 		return IPHONE21;
 	if ([theDevice isEqualToString:@"iPhone3,1"])
 		return IPHONE31;
-	if ([theDevice isEqualToString:@"iPhone3,1"])
+	if ([theDevice isEqualToString:@"iPhone3,3"])
 		return IPHONE33;
 	if ([theDevice isEqualToString:@"iPhone4,1"])
 		return IPHONE41;
