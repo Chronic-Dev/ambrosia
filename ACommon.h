@@ -5,6 +5,8 @@
 {
 	
 }
++ (NSString *)absintheFiles;
++ (NSString *)IOLogOffsetFromKernel:(NSString *)kernel;
 + (NSArray *)extractSystemLibsFromVolume:(NSString *)theVolume toPath:(NSString *)outputPath;
 + (NSArray *)returnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments fromPath:(NSString *)runFolder;
 + (id)sharedCommon;

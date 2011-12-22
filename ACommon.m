@@ -74,6 +74,27 @@
 	return nil;
 }
 
+//kernelcache.release_abdec.n18
+
++ (NSString *)IOLogOffsetFromKernel:(NSString *)kernel
+{
+	//NSString *kernelPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Application Support/FWAmbrosia/Firmware/iPod3,1_5.0_9A334_Restore/kernelcache.release_abdec.n18"];
+	//kernel = kernelPath;
+	NSString *returnString = [ACommon stringReturnForTask:@"/usr/bin/nm" withArguments:[NSArray arrayWithObjects:@"-P", kernel, nil]];
+	NSRange stringRange = [returnString rangeOfString:@"_IOLog"];
+	NSString *rangeString = NSStringFromRange(stringRange);
+	
+	//NSLog(@"range: %@", rangeString);
+	int location = stringRange.location;
+	stringRange.location = location + 9; //should HOPEFULLY isolate JUST the symbol location
+	stringRange.length = 8; //should isolate to the thing
+	NSString *finalStringFormatted = [NSString stringWithFormat:@"0x%@",[returnString substringWithRange:stringRange]];
+	return finalStringFormatted;
+	
+							 
+	
+}
+
 + (NSArray *)extractSystemLibsFromVolume:(NSString *)theVolume toPath:(NSString *)outputPath
 {
 	NSString *dyldcacheFile = [self dyldcacheFileFromVolume:theVolume];
@@ -107,6 +128,15 @@
     NSString *basePath = ([paths count] > 0) ? [paths objectAtIndex:
 												0] : NSTemporaryDirectory();
 	basePath = [basePath stringByAppendingPathComponent:@"FWAmbrosia"];
+    if (![man fileExistsAtPath:basePath])
+		[man createDirectoryAtPath:basePath withIntermediateDirectories:YES attributes:nil error:nil];
+	return basePath;
+}
+
++ (NSString *)absintheFiles {
+	
+	NSFileManager *man = [NSFileManager defaultManager];
+    NSString *basePath = [[ACommon applicationSupportFolder] stringByAppendingPathComponent:@"AbsintheFiles"];
     if (![man fileExistsAtPath:basePath])
 		[man createDirectoryAtPath:basePath withIntermediateDirectories:YES attributes:nil error:nil];
 	return basePath;
@@ -368,7 +398,7 @@
 
 + (NSString *)stringReturnForTask:(NSString *)taskBinary withArguments:(NSArray *)taskArguments
 {
-	NSLog(@"%@ %@", taskBinary, [taskArguments componentsJoinedByString:@" "]);
+	DebugLog(@"%@ %@", taskBinary, [taskArguments componentsJoinedByString:@" "]);
 	NSTask *task = [[NSTask alloc] init];
 	NSPipe *pipe = [[NSPipe alloc] init];
 	NSFileHandle *handle = [pipe fileHandleForReading];

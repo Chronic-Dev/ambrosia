@@ -35,8 +35,8 @@
 @property (assign) AFirmware *currentFirmware;
 @property (readwrite, assign) BOOL poisoning;
 
-- (NSArray *)dumpKernelSymbolsFromFirmwareFolder:(NSString *)outputFolder;
-- (NSArray *)dumpCSymbolsFromFirmwareFolder:(NSString *)outputFolder;
+- (NSDictionary *)dumpKernelSymbolsFromFirmwareFolder:(NSString *)outputFolder;
+- (NSDictionary *)dumpCSymbolsFromFirmwareFolder:(NSString *)outputFolder;
 
 -(NSArray *)kbagArray;
 - (void)setDownloadProgress:(double)theProgress;

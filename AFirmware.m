@@ -286,6 +286,11 @@
 		 */
 }
 
+- (NSString *)constantsFile
+{
+	NSString *fileName = [[[self trimmedName] stringByAppendingString:@"_constants"] stringByAppendingPathExtension:@"h"];
+	return [[ACommon absintheFiles] stringByAppendingPathComponent:fileName];
+}
 
 - (NSString *)extractASR
 {

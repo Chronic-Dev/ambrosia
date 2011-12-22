@@ -89,7 +89,7 @@ static inline ADevice ADeviceMake(int platform, int subplatform)
 - (NSDictionary *)VariantContents;
 - (NSDictionary *)VariantContentsTwo;
 - (NSDictionary *)manifestTwo;
-
+- (NSString *)constantsFile;
 - (NSArray *)keyArray;
 - (void)setBuildIdentity;
 -(NSArray *)manifestArray;
