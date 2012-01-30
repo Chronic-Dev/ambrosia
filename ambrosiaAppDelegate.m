@@ -768,7 +768,7 @@ void print_progress(double progress, void* data) {
 				
 				//for now im taking out the header dumps, slowing me down too much.
 				
-				/*
+				
 				
 				[self setDownloadText:@"Dumping PrivateFrameworks Headers..."];
 				[self processPFHeaders:cacheList fromCache:[ACommon dyldcacheFileFromVolume:mountVolume]];
@@ -783,7 +783,7 @@ void print_progress(double progress, void* data) {
 				[self processFHeaders:cacheList fromCache:[ACommon dyldcacheFileFromVolume:mountVolume]];
 				
 				 
-				 */
+				 
 					
 				
 				
@@ -940,7 +940,7 @@ void print_progress(double progress, void* data) {
 
 - (NSArray *)libsystemKernelSymbols
 {
-	return [NSArray arrayWithObjects:@"_mmap", @"_open", @"_mkdir", @"_ioctl", @"_close", @"_mount", @"_unmount" , @"_syscall", nil];
+	return [NSArray arrayWithObjects:@"_mmap", @"_open", @"_mkdir", @"_ioctl", @"_close", @"_mount", @"_unmount" , @"_syscall", @"_execve", nil];
 }
 
 - (NSDictionary *)dumpKernelSymbolsFromFirmwareFolder:(NSString *)outputFolder

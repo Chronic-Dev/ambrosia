@@ -74,9 +74,14 @@
  
  */
 
++ (NSString *)virtualSymbolFromFile:(NSString *)inputFile fromString:(NSString *)searchString
+{
+	return [ACommon stringReturnForTask:MACHOMAN withArguments:[NSArray arrayWithObjects:inputFile, @"-s", searchString, nil] fromLocation:[inputFile stringByDeletingLastPathComponent]];
+}
+
 + (NSString *)virtualSymbolFromFile:(NSString *)inputFile withLocation:(NSString *)theLocation
 {
-	return [ACommon stringReturnForTask:MACHOMAN withArguments:[NSArray arrayWithObjects:inputFile, theLocation, nil] fromLocation:[inputFile stringByDeletingLastPathComponent]];
+	return [ACommon stringReturnForTask:MACHOMAN withArguments:[NSArray arrayWithObjects:inputFile, @"-a", theLocation, nil] fromLocation:[inputFile stringByDeletingLastPathComponent]];
 	
 }
 

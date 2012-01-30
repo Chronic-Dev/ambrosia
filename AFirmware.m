@@ -333,26 +333,14 @@
 
 - (NSDictionary *)defaultFilesystemPatches
 {
-	
-	NSDictionary *atvDict = [NSDictionary 
-							 dictionaryWithObjectsAndKeys:@"Patch", @"Action", @"Applications/AppleTV.app/AppleTV", 
-							 @"File", @"Seatbelt", @"Name", @"AppleTV.patch", @"Patch", nil];
+
 	NSDictionary *fstabDict = [NSDictionary 
 							   dictionaryWithObjectsAndKeys:@"Patch", @"Action", @"etc/fstab", 
 							   @"File", @"Filesystem Write Access", @"Name", @"fstab.patch", @"Patch", nil];
 	
-	NSArray *patchArray = nil;
 	
-	if ([self deviceInt] == kAppleTVDevice) //only add atvdict for appletv firmware! duh!
-	{
-		patchArray = [NSArray arrayWithObjects:atvDict, fstabDict, nil];
-	
-	} else {
-	
-		patchArray = [NSArray arrayWithObject:fstabDict];
-	}
 
-	return [NSDictionary dictionaryWithObject:patchArray forKey:@"Filesystem Jailbreak"];
+	return [NSDictionary dictionaryWithObject:[NSArray arrayWithObject:fstabDict] forKey:@"Filesystem Jailbreak"];
 }
 
 - (NSString *)trimmedName
@@ -526,7 +514,7 @@
 
 - (BOOL)hasFWDict
 {
-	if ([self archivedFirmwareDict] != nil)
+	if ([self firmwareDict] != nil)
 		return (TRUE);
 	
 	return (FALSE);
