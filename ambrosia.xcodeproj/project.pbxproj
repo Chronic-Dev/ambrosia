@@ -17,6 +17,7 @@
 		32706128135BBD2C00EE420C /* libusb-1.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 32706126135BBD2C00EE420C /* libusb-1.0.a */; };
 		3270612A135BBD6A00EE420C /* libstdc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 32706129135BBD6A00EE420C /* libstdc++.dylib */; };
 		3270617C135BBF2600EE420C /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3270617B135BBF2600EE420C /* IOKit.framework */; };
+		327EC29414D8F7EB0058D651 /* NSData+Flip.mm in Sources */ = {isa = PBXBuildFile; fileRef = 327EC29314D8F7EB0058D651 /* NSData+Flip.mm */; };
 		32CFE76D136A429F00BFCAEB /* ambrosia.icns in Resources */ = {isa = PBXBuildFile; fileRef = 32CFE76C136A429F00BFCAEB /* ambrosia.icns */; };
 		899548A214443F6400EAD01A /* patchClass.m in Sources */ = {isa = PBXBuildFile; fileRef = 899548A114443F6400EAD01A /* patchClass.m */; };
 		8995491F144451E600EAD01A /* fstab.patch in Resources */ = {isa = PBXBuildFile; fileRef = 8995491E144451E600EAD01A /* fstab.patch */; };
@@ -50,6 +51,8 @@
 		32706126135BBD2C00EE420C /* libusb-1.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = "libusb-1.0.a"; sourceTree = "<group>"; };
 		32706129135BBD6A00EE420C /* libstdc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libstdc++.dylib"; path = "usr/lib/gcc/i686-apple-darwin10/4.0.1/libstdc++.dylib"; sourceTree = SDKROOT; };
 		3270617B135BBF2600EE420C /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		327EC29214D8F7EB0058D651 /* NSData+Flip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData+Flip.h"; sourceTree = "<group>"; };
+		327EC29314D8F7EB0058D651 /* NSData+Flip.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "NSData+Flip.mm"; sourceTree = "<group>"; };
 		32CFE76C136A429F00BFCAEB /* ambrosia.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = ambrosia.icns; sourceTree = "<group>"; };
 		899548A014443F6400EAD01A /* patchClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = patchClass.h; sourceTree = "<group>"; };
 		899548A114443F6400EAD01A /* patchClass.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = patchClass.m; sourceTree = "<group>"; };
@@ -80,6 +83,8 @@
 		080E96DDFE201D6D7F000001 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				327EC29214D8F7EB0058D651 /* NSData+Flip.h */,
+				327EC29314D8F7EB0058D651 /* NSData+Flip.mm */,
 				89ADE17314A29DFD001EB5E8 /* constants.h */,
 				321DA02D1357A27C0063757E /* Firmware */,
 				321D9CD1135795530063757E /* defines.h */,
@@ -255,6 +260,7 @@
 				321D9F8C13579C190063757E /* ACommon.m in Sources */,
 				321DA0321357A2940063757E /* AFirmware.m in Sources */,
 				899548A214443F6400EAD01A /* patchClass.m in Sources */,
+				327EC29414D8F7EB0058D651 /* NSData+Flip.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

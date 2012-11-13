@@ -407,6 +407,8 @@
 
 	NSString *asrPath = [self extractASR];
 	
+	/*
+	
 	NSLog(@"creating patches....");
 	
 	[ACommon changeStatus:@"Creating patches..."];
@@ -452,6 +454,7 @@
 	[man moveItemAtPath:ibecPatch toPath:bundleiBEC error:nil];
 	[man moveItemAtPath:ibssPatch toPath:bundleiBSS error:nil];
 	[man moveItemAtPath:kernelPatch toPath:bundleKernel error:nil];
+	*/
 	
 	NSString *finalFstab = [bundleFolder stringByAppendingPathComponent:@"fstab.patch"];
 	
@@ -1005,6 +1008,49 @@
 	
 }
 
+- (NSData *)UniqueBuildID
+{
+	NSArray *buildIdentities = [[self buildManifest] objectForKey:@"BuildIdentities"];
+	return [[buildIdentities objectAtIndex:buildIdentity] valueForKey:@"UniqueBuildID"];
+}
+
+- (NSDictionary *)blobReadyManifest
+{
+		//ProductBuildVersion
+	NSString *pbv = [self ProductBuildVersion]; //the final key for the dictionary
+	NSMutableDictionary *manifestD = [[NSMutableDictionary alloc] initWithDictionary:[self manifest]];
+	[manifestD removeObjectForKey:@"OS"];
+	
+	
+	NSEnumerator *keyEnum = [manifestD keyEnumerator];
+	id currentKey = nil;
+	
+	while (currentKey = [keyEnum nextObject])
+	{
+			//NSLog(@"currentObject: %@", currentObject);
+		id currentObject = [manifestD objectForKey:currentKey];
+		
+		if ([currentObject respondsToSelector:@selector(allKeys)])
+		{
+			NSArray *keys = [currentObject allKeys];
+			if ([keys containsObject:@"Info"])
+			{
+				[currentObject removeObjectForKey:@"Info"];
+				
+			}
+			
+			if ([keys containsObject:@"BuildString"])
+			{
+				[currentObject removeObjectForKey:@"BuildString"];
+				
+			}
+		}
+		
+	}
+	
+	[manifestD setObject:[self UniqueBuildID] forKey:@"UniqueBuildID"];
+	return [NSDictionary dictionaryWithObject:[manifestD autorelease] forKey:pbv];
+}
 
 - (NSDictionary *)manifest
 {

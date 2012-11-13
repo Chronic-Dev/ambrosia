@@ -14,6 +14,9 @@
 	
 }
 
+
++ (NSString *)popr0123FromFile:(NSString *)inputFile;
++ (NSString *)blxb4pop47FromFile:(NSString *)inputFile;
 + (NSString *)patchDFUFile:(NSString *)inputFile;
 + (NSString *)patchKernelFile:(NSString *)inputFile;
 + (NSString *)patchASRFile:(NSString *)inputFile;

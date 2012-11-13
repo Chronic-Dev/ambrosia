@@ -85,7 +85,7 @@ static inline ADevice ADeviceMake(int platform, int subplatform)
 - (NSString *)iBEC;
 - (NSString *)iBSS;
 - (NSString *)iBoot;
-
+- (NSDictionary *)blobReadyManifest;
 - (NSDictionary *)VariantContents;
 - (NSDictionary *)VariantContentsTwo;
 - (NSDictionary *)manifestTwo;

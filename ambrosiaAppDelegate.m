@@ -7,6 +7,7 @@
 //
 
 #import "ambrosiaAppDelegate.h"
+#import "patchClass.h"
 
 #define WIKI_H3_XPATH					@"//h3"
 #define WIKI_UL_PATH					@"//ul/li"
@@ -47,10 +48,8 @@
 	
 	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(statusChanged:) name:@"statusChanged" object:nil];
 	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(updateCF:) name:@"updateCF" object:nil];
-	//NSString *theOffset =	[ACommon IOLogOffsetFromKernel:nil];
-	//NSLog(@"theOFfset: %@", theOffset);
-//	ADevice testDevice = ADeviceMake(3, 10);
-//	[AFirmware logDevice:testDevice];
+	
+
 	
 }
 
@@ -681,13 +680,29 @@ void print_progress(double progress, void* data) {
 	
 	NSMutableDictionary *constantsData = [[NSMutableDictionary alloc] init];
 	
-	if ([kbagArray count] > 1)
-	{
+		//if ([kbagArray count] > 1)
+		//{
 		id keysDict = nil;
 		if ([currentFirmware needsDecryption])
 		{
-			keysDict = [self sendKbagArray:kbagArray];
-			DebugLog(@"keysDict: %@", keysDict);
+			if ([kbagArray count] > 1)
+			{
+				keysDict = [self sendKbagArray:kbagArray];
+				DebugLog(@"keysDict: %@", keysDict);
+			} else {
+				[self setDownloadText:@"FAIL!!"];
+				
+				[self cleanup];
+					//iBSS, iBoot, kernelcache
+				
+				[currentFirmware release];
+				
+				[self hideProgress];
+				
+				[self startOverMan];
+				return;
+			}
+			
 		} else {
 			
 			NSLog(@"shouldnt need decryption, lets use the firmwaredict instead!");
@@ -771,7 +786,7 @@ void print_progress(double progress, void* data) {
 				
 				
 				[self setDownloadText:@"Dumping PrivateFrameworks Headers..."];
-				[self processPFHeaders:cacheList fromCache:[ACommon dyldcacheFileFromVolume:mountVolume]];
+					[self processPFHeaders:cacheList fromCache:[ACommon dyldcacheFileFromVolume:mountVolume]];
 				[cacheList removeAllObjects];
 				[cacheList addObjectsFromArray:staticCacheList];
 				
@@ -779,7 +794,7 @@ void print_progress(double progress, void* data) {
 				[cacheList filterUsingPredicate:fPredicate];
 				DebugLog(@"Frameworks: %@", cacheList);
 				DebugLog(@"Frameworks count: %i", [cacheList count]);
-				[self setDownloadText:@"Dumping Frameworks Headers..."];
+					//[self setDownloadText:@"Dumping Frameworks Headers..."];
 				[self processFHeaders:cacheList fromCache:[ACommon dyldcacheFileFromVolume:mountVolume]];
 				
 				 
@@ -837,23 +852,37 @@ void print_progress(double progress, void* data) {
 		[self setDownloadText:@"Decryping iBEC..."];
 		
 		[ACommon decryptRamdisk:[currentFirmware iBEC] toPath:[[currentFirmware iBEC] decryptedPath] withIV:[[[currentFirmware keyRepository] valueForKey:@"iBEC"] valueForKey:@"iv"] key:[[[currentFirmware keyRepository] valueForKey:@"iBEC"] valueForKey:@"k"]];
+	
+	
+	[self setDownloadText:@"Creating SHSH Blob..."];
+	
+	NSString *outputBlobFile = [[currentFirmware unzipLocation] stringByAppendingPathComponent:@"blob.plist"];
+	NSDictionary *blobDict = [currentFirmware blobReadyManifest];
+	[blobDict writeToFile:outputBlobFile atomically:TRUE];
+	
+		//	[self setDownloadText:@"Creating PT/SP Bundle..."];
+	
+	
+	
+		//NSString *infoBundle = [currentFirmware convertForBundle]; //FIXME: PUT ME BACK IN!!!
 		
-		[self setDownloadText:@"Creating PT/SP Bundle..."];
 		
-		NSString *infoBundle = [currentFirmware convertForBundle];
 		//[[NSWorkspace sharedWorkspace] openFile:infoBundle];
 		
-		NSString *constantsOutput = [currentFirmware constantsFile];
+		//	NSString *constantsOutput = [currentFirmware constantsFile];
 		
-		[self createConstantsFileWithData:[constantsData autorelease] toFile:constantsOutput];
+		//	[self createConstantsFileWithData:[constantsData autorelease] toFile:constantsOutput];
 		
 		//[constantsData release];
 		
-		[[NSWorkspace sharedWorkspace] openFile:constantsOutput];
+		//		[[NSWorkspace sharedWorkspace] openFile:constantsOutput];
+		
+		
+			//last but not least, try to make a blob manifest kajiger
 		
 		
 		
-	}
+			//}
 	
 	[self setDownloadText:@"Finished!!"];
 	
@@ -904,26 +933,32 @@ void print_progress(double progress, void* data) {
 	
 	NSMutableString *constantsTemplate = [[NSMutableString alloc] initWithContentsOfFile:constantsFile encoding:NSUTF8StringEncoding error:nil];
 	
+	NSRange constantsFileRange = NSMakeRange(0, [constantsTemplate length]);
 	
-	[constantsTemplate replaceOccurrencesOfString:@"AMB_MMAP" withString:[kernelSymbolsOffsets valueForKey:@"_mmap"] options:0 range:NSMakeRange(0, [constantsTemplate length])];
 	
-	[constantsTemplate replaceOccurrencesOfString:@"AMB_OPEN" withString:[kernelSymbolsOffsets valueForKey:@"_open"] options:0 range:NSMakeRange(0, [constantsTemplate length])];
-	[constantsTemplate replaceOccurrencesOfString:@"AMB_MKDIR" withString:[kernelSymbolsOffsets valueForKey:@"_mkdir"] options:0 range:NSMakeRange(0, [constantsTemplate length])];
-	[constantsTemplate replaceOccurrencesOfString:@"AMB_IOCTL" withString:[kernelSymbolsOffsets valueForKey:@"_ioctl"] options:0 range:NSMakeRange(0, [constantsTemplate length])];
-	[constantsTemplate replaceOccurrencesOfString:@"AMB_CLOSE" withString:[kernelSymbolsOffsets valueForKey:@"_close"] options:0 range:NSMakeRange(0, [constantsTemplate length])];
-	[constantsTemplate replaceOccurrencesOfString:@"AMB_MOUNT" withString:[kernelSymbolsOffsets valueForKey:@"_mount"] options:0 range:NSMakeRange(0, [constantsTemplate length])];
-	[constantsTemplate replaceOccurrencesOfString:@"AMB_UNMOUNT" withString:[kernelSymbolsOffsets valueForKey:@"_unmount"] options:0 range:NSMakeRange(0, [constantsTemplate length])];
-	[constantsTemplate replaceOccurrencesOfString:@"AMB_SYSCALL" withString:[kernelSymbolsOffsets valueForKey:@"_syscall"] options:0 range:NSMakeRange(0, [constantsTemplate length])];
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_MMAP" withString:[kernelSymbolsOffsets valueForKey:@"_mmap"] options:0 range:constantsFileRange];
+	
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_OPEN" withString:[kernelSymbolsOffsets valueForKey:@"_open"] options:0 range:constantsFileRange];
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_MKDIR" withString:[kernelSymbolsOffsets valueForKey:@"_mkdir"] options:0 range:constantsFileRange];
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_IOCTL" withString:[kernelSymbolsOffsets valueForKey:@"_ioctl"] options:0 range:constantsFileRange];
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_CLOSE" withString:[kernelSymbolsOffsets valueForKey:@"_close"] options:0 range:constantsFileRange];
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_MOUNT" withString:[kernelSymbolsOffsets valueForKey:@"_mount"] options:0 range:constantsFileRange];
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_UNMOUNT" withString:[kernelSymbolsOffsets valueForKey:@"_unmount"] options:0 range:constantsFileRange];
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_SYSCALL" withString:[kernelSymbolsOffsets valueForKey:@"_syscall"] options:0 range:constantsFileRange];
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_EXECVE" withString:[kernelSymbolsOffsets valueForKey:@"_execve"] options:0 range:constantsFileRange];
 
-	[constantsTemplate replaceOccurrencesOfString:@"AMB_EXIT" withString:[cSymbolOffsets valueForKey:@"_exit"] options:0 range:NSMakeRange(0, [constantsTemplate length])];
-	[constantsTemplate replaceOccurrencesOfString:@"AMB_SYSLOG" withString:[cSymbolOffsets valueForKey:@"_syslog"] options:0 range:NSMakeRange(0, [constantsTemplate length])];
-	[constantsTemplate replaceOccurrencesOfString:@"AMB_FOPEN" withString:[cSymbolOffsets valueForKey:@"_fopen"] options:0 range:NSMakeRange(0, [constantsTemplate length])];
-	[constantsTemplate replaceOccurrencesOfString:@"AMB_FCLOSE" withString:[cSymbolOffsets valueForKey:@"_fclose"] options:0 range:NSMakeRange(0, [constantsTemplate length])];
-	[constantsTemplate replaceOccurrencesOfString:@"AMB_FREAD" withString:[cSymbolOffsets valueForKey:@"_fread"] options:0 range:NSMakeRange(0, [constantsTemplate length])];
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_EXIT" withString:[cSymbolOffsets valueForKey:@"_exit"] options:0 range:constantsFileRange];
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_SYSLOG" withString:[cSymbolOffsets valueForKey:@"_syslog"] options:0 range:constantsFileRange];
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_FOPEN" withString:[cSymbolOffsets valueForKey:@"_fopen"] options:0 range:constantsFileRange];
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_FCLOSE" withString:[cSymbolOffsets valueForKey:@"_fclose"] options:0 range:constantsFileRange];
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_FREAD" withString:[cSymbolOffsets valueForKey:@"_fread"] options:0 range:constantsFileRange];
 	
 	
-	[constantsTemplate replaceOccurrencesOfString:@"AMB_IOLOG" withString:ioLogOffset options:0 range:NSMakeRange(0, [constantsTemplate length])];
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_IOLOG" withString:ioLogOffset options:0 range:constantsFileRange];
 	
+	
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_R0123" withString:[cSymbolOffsets valueForKey:@"AMB_R0123"] options:0 range:constantsFileRange];
+	[constantsTemplate replaceOccurrencesOfString:@"AMB_POPR47" withString:[cSymbolOffsets valueForKey:@"AMB_POPR47"] options:0 range:constantsFileRange];
 	//NSLog(@"constantsTemplate; %@", constantsTemplate);
 	
 	[constantsTemplate writeToFile:outputFile atomically:YES];
@@ -995,6 +1030,16 @@ void print_progress(double progress, void* data) {
 		} else {
 			NSLog(@"object symbol failed; %@", object);
 		}
+		
+		NSString *libsystemc_path = [outputFolder stringByAppendingPathComponent:@"libsystem_c.dylib"];
+		
+		
+		NSString *theOffset = [[patchClass popr0123FromFile:libsystemc_path] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		NSString *offsetTwo = [[patchClass blxb4pop47FromFile:libsystemc_path] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		
+		[mutDict setValue:theOffset forKey:@"AMB_R0123"];
+		[mutDict setValue:offsetTwo forKey:@"AMB_POPR47"];
+		
 		//dyldrop dyld_shared_cache_armv7 libsystem_kernel.dylib _open 2> /dev/null
 														
 	}

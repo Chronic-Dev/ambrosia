@@ -7,6 +7,7 @@
 //
 
 #import "patchClass.h"
+#import "NSData+Flip.h"
 
 
 @implementation patchClass
@@ -73,6 +74,46 @@
  
  
  */
+
+/*
+ 
+ #define LIBC_POP_R0123 0x32109b10
+ #define LIBC_BLX_R4_POP_R47 (0x320bcf38 + 1)
+ 
+ LIBC_POP_R0123 find 0f80bde8 in libsystem_c.dylib = 0x077b10
+ 
+ machoman libsystem_c.dylib -a 0x077b10
+ 
+ LIBC_BLX_R4_POP_R47 find a0470446204690bd in libsystem_c.dylib = 0x02A2F38
+ 
+ machoman libsystem_c.dylib -a 0x02A2F38
+ 
+ */
+
++ (NSString *)popr0123FromFile:(NSString *)inputFile
+{
+	NSData *myData = [NSData dataWithContentsOfMappedFile:inputFile];
+	NSData *dataToFind = [NSData dataFromStringHex:@"0f80bde8"];
+	NSRange searchRange = NSMakeRange(0, myData.length);
+	NSRange dataRange = [myData rangeOfData:dataToFind options:0 range:searchRange];
+	NSString *location = [NSString stringWithFormat:@"0x%08x", dataRange.location];
+	NSLog(@"location of %@: %@", dataToFind, location);
+	return [ACommon stringReturnForTask:MACHOMAN withArguments:[NSArray arrayWithObjects:inputFile, @"-a", location, nil] fromLocation:[inputFile stringByDeletingLastPathComponent]];
+
+}
+
++ (NSString *)blxb4pop47FromFile:(NSString *)inputFile
+{
+		//a0470446204690bd
+	
+	NSData *myData = [NSData dataWithContentsOfMappedFile:inputFile];
+	NSData *dataToFind = [NSData dataFromStringHex:@"a0470446204690bd"];
+	NSRange searchRange = NSMakeRange(0, myData.length);
+	NSRange dataRange = [myData rangeOfData:dataToFind options:0 range:searchRange];
+	NSString *location = [NSString stringWithFormat:@"0x%08x", dataRange.location];
+	NSLog(@"location of %@: %@", dataToFind, location);
+	return [ACommon stringReturnForTask:MACHOMAN withArguments:[NSArray arrayWithObjects:inputFile, @"-a", location, nil] fromLocation:[inputFile stringByDeletingLastPathComponent]];
+}
 
 + (NSString *)virtualSymbolFromFile:(NSString *)inputFile fromString:(NSString *)searchString
 {
