@@ -367,7 +367,7 @@
 	NSMutableDictionary *bundleInfo = [[NSMutableDictionary alloc] init];
 	[bundleInfo setObject:[NSNumber numberWithBool:FALSE] forKey:@"DeleteBuildManifest"];
 	[bundleInfo setObject:@"" forKey:@"DownloadUrl"];
-	[bundleInfo setObject:[self fwName] forKey:@"Filename"];
+	[bundleInfo setObject:[[self fwName] stringByAppendingPathExtension:@"ipsw"] forKey:@"Filename"];
 	[bundleInfo setObject:[self defaultFilesystemPatches] forKey:@"FilesystemPatches"];
 	[bundleInfo setObject:[self firmwarePatches] forKey:@"FirmwarePatches"];
 	[bundleInfo setObject:[self trimmedName] forKey:@"Name"];

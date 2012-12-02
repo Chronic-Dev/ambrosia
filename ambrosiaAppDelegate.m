@@ -860,11 +860,11 @@ void print_progress(double progress, void* data) {
 	NSDictionary *blobDict = [currentFirmware blobReadyManifest];
 	[blobDict writeToFile:outputBlobFile atomically:TRUE];
 	
-		//	[self setDownloadText:@"Creating PT/SP Bundle..."];
+		[self setDownloadText:@"Creating PT/SP Bundle..."];
 	
 	
 	
-		//NSString *infoBundle = [currentFirmware convertForBundle]; //FIXME: PUT ME BACK IN!!!
+		NSString *infoBundle = [currentFirmware convertForBundle]; //FIXME: PUT ME BACK IN!!!
 		
 		
 		//[[NSWorkspace sharedWorkspace] openFile:infoBundle];
