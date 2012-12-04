@@ -255,16 +255,18 @@
 	NSString *ibecPath = [[[[self manifest] valueForKey:@"iBEC"] valueForKey:@"Info"] valueForKey:@"Path"];
 	NSString *ibecPatch = [self patchNameFromFile:ibecPath];
 	
-	NSString *kcacheK = [[[self keyRepository] valueForKey:@"KernelCache"] valueForKey:@"k"];
-	NSString *kcacheiv = [[[self keyRepository] valueForKey:@"KernelCache"] valueForKey:@"iv"]; 
-	NSString *kcachePath = [[[[self manifest] valueForKey:@"KernelCache"] valueForKey:@"Info"] valueForKey:@"Path"];
-	NSString *kcachePatch = [self patchNameFromFile:kcachePath];
+		//NSString *kcacheK = [[[self keyRepository] valueForKey:@"KernelCache"] valueForKey:@"k"];
+		//NSString *kcacheiv = [[[self keyRepository] valueForKey:@"KernelCache"] valueForKey:@"iv"]; 
+		//NSString *kcachePath = [[[[self manifest] valueForKey:@"KernelCache"] valueForKey:@"Info"] valueForKey:@"Path"];
+		//NSString *kcachePatch = [self patchNameFromFile:kcachePath];
 	
 	NSDictionary *restoreRamDisk = [NSDictionary dictionaryWithObjectsAndKeys:rrdPath, @"File", rrdiv, @"IV", rrdK, @"Key", @"8", @"TypeFlag",nil];
 	NSDictionary *ibssDict = [NSDictionary dictionaryWithObjectsAndKeys:ibssPath, @"File", ibssiv, @"IV", ibssK, @"Key", @"8", @"TypeFlag", ibssPatch, @"Patch", nil];
 	NSDictionary *ibecDict = [NSDictionary dictionaryWithObjectsAndKeys:ibecPath, @"File", ibeciv, @"IV", ibecK, @"Key", @"8", @"TypeFlag", ibecPatch, @"Patch",nil];
-	NSDictionary *kcacheDict = [NSDictionary dictionaryWithObjectsAndKeys:kcachePath, @"File", kcacheiv, @"IV", kcacheK, @"Key", @"8", @"TypeFlag", kcachePatch, @"Patch",nil];
-	return [NSDictionary dictionaryWithObjectsAndKeys:restoreRamDisk, @"Restore Ramdisk", ibssDict, @"iBSS", ibecDict, @"iBEC",kcacheDict, @"kernelcache", nil];
+		//NSDictionary *kcacheDict = [NSDictionary dictionaryWithObjectsAndKeys:kcachePath, @"File", kcacheiv, @"IV", kcacheK, @"Key", @"8", @"TypeFlag", kcachePatch, @"Patch",nil];
+		//return [NSDictionary dictionaryWithObjectsAndKeys:restoreRamDisk, @"Restore Ramdisk", ibssDict, @"iBSS", ibecDict, @"iBEC",kcacheDict, @"kernelcache", nil];
+	
+	return [NSDictionary dictionaryWithObjectsAndKeys:restoreRamDisk, @"Restore Ramdisk", ibssDict, @"iBSS", ibecDict, @"iBEC", nil];
 	
 }//FIXME: missing patch path!!!!!
 
@@ -373,6 +375,7 @@
 	[bundleInfo setObject:[self trimmedName] forKey:@"Name"];
 	[bundleInfo setObject:[[self OS] lastPathComponent] forKey:@"RootFilesystem"];
 	[bundleInfo setObject:@"ramdisk" forKey:@"RestoreRamdiskMountVolume"];
+	[bundleInfo setObject:[NSNumber numberWithBool:FALSE] forKey:@"Untethered"];
 	
 	NSString *rfsmv = [[self mountVolume] lastPathComponent];
 	
