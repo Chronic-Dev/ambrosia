@@ -1006,8 +1006,13 @@
 - (NSDictionary *)VariantContentsTwo
 {
 	NSArray *buildIdentities = [[self buildManifest] objectForKey:@"BuildIdentities"];
-	NSDictionary *one = [[[buildIdentities objectAtIndex:buildIdentity+1] valueForKey:@"Info"] valueForKey:@"VariantContents"];
-	return one;
+	if ([buildIdentities count] > 1)
+	{
+		NSDictionary *one = [[[buildIdentities objectAtIndex:buildIdentity+1] valueForKey:@"Info"] valueForKey:@"VariantContents"];
+		return one;
+	} 
+
+	return nil;	
 	
 }
 

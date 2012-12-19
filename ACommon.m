@@ -825,14 +825,26 @@
 	
 	[ACommon changeStatus:@"generating vfdecrypt key..."];
 	
-	NSLog(@"generating vfdecrypt key...\n");
+	NSLog(@"checking for vfdecrypt key...\n");
 	
-	NSString *vfDecryptKey = [ACommon genpassFromRamdisk:outputFile platform:[currentFirmware platform] andFilesystem:[currentFirmware OS]];
-	vfDecryptKey = [vfDecryptKey stringByReplacingOccurrencesOfString:@"\n" withString:@""];
-	vfDecryptKey = [vfDecryptKey substringFromIndex:14];
-	vfDecryptKey = [vfDecryptKey cleanedString];
+	NSString *vfDecryptKey = [currentFirmware vfDecryptKey];
 	
 	NSLog(@"vfdecrypt key: %@\n", vfDecryptKey);
+	
+	if (vfDecryptKey == nil)
+	{
+		NSLog(@"generating vfdecrypt key...\n");
+		
+		vfDecryptKey = [ACommon genpassFromRamdisk:outputFile platform:[currentFirmware platform] andFilesystem:[currentFirmware OS]];
+		vfDecryptKey = [vfDecryptKey stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+		vfDecryptKey = [vfDecryptKey substringFromIndex:14];
+		vfDecryptKey = [vfDecryptKey cleanedString];
+		
+		NSLog(@"vfdecrypt key: %@\n", vfDecryptKey);
+		
+	}
+	
+
 	
 	
 	if (vfDecryptKey != nil)
