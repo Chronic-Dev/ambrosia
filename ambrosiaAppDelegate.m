@@ -252,9 +252,13 @@
 	//return;
 	[sender setEnabled:FALSE];
 	NSOpenPanel *op = [NSOpenPanel openPanel];
-	[op runModalForTypes:[NSArray arrayWithObject:@"ipsw"]];
+	int buttonReturn = [op runModalForTypes:[NSArray arrayWithObject:@"ipsw"]];
 	NSString *theFile = [op filename];
-	
+	if (buttonReturn != NSOKButton) {
+		[sender setEnabled:TRUE]; 
+		return;
+		
+	}
 	
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(unzipFinished:) name:@"unzipComplete" object:nil];
 	currentFirmware = [[AFirmware alloc] initWithFile:theFile];
@@ -734,6 +738,9 @@ void print_progress(double progress, void* data) {
 			
 			if (mountVolume != nil)
 			{
+				NSString *headerFolderPath = [[currentFirmware unzipLocation] stringByAppendingPathComponent:[mountVolume lastPathComponent]];
+				[FM createDirectoryAtPath:headerFolderPath attributes:nil];
+				
 				[keysDict setValue:kbagArray forKey:@"kbagArray"];
 				[keysDict setValue:mountVolume forKey:@"mountVolume"];
 				NSDictionary *mountDict = [NSDictionary dictionaryWithObject:mountVolume forKey:@"mountVolume"];
@@ -798,9 +805,25 @@ void print_progress(double progress, void* data) {
 				[self processFHeaders:cacheList fromCache:[ACommon dyldcacheFileFromVolume:mountVolume]];
 				
 				 
-				 
-					
+					//check if its an appletv v
 				
+				if ([currentFirmware deviceInt] == kAppleTVDevice)
+				{
+					NSString *appleTVApp = [mountVolume stringByAppendingPathComponent:@"/Applications/AppleTV.app"];
+					NSString *localAppleTVApp = [[currentFirmware unzipLocation] stringByAppendingPathComponent:@"AppleTV.app"];
+					NSString *atvPath = [headerFolderPath stringByAppendingPathComponent:@"ATV"];
+					NSString *localatvBinary = [localAppleTVApp stringByAppendingPathComponent:@"AppleTV"];
+					
+					[FM copyItemAtPath:appleTVApp toPath:localAppleTVApp error:nil];
+	
+					NSArray *taskArguments = [NSArray arrayWithObjects:@"-pabkkzARH", @"-o", atvPath, localatvBinary, nil];
+					[ACommon returnForTask:CDZ withArguments:taskArguments];
+				}
+					
+				NSString *newFrameworks = [headerFolderPath stringByAppendingPathComponent:@"Framworks"];
+				NSString *newPFrameworks = [ headerFolderPath stringByAppendingPathComponent:@"PrivateFrameworks"];
+				[FM moveItemAtPath:[currentFirmware frameworksPath] toPath:newFrameworks error:nil];
+				[FM moveItemAtPath:[currentFirmware privateFrameworksPath] toPath:newPFrameworks error:nil];
 				
 			}
 			
